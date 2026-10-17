@@ -1,0 +1,83 @@
+body { margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; background: var(--canopy); color: var(--ink); }
+
+/* Preview stage: a stand-in desktop so the glass has something to blur. Not part of the app. */
+.br-stage { position: relative; overflow: hidden; padding: var(--space-6); background: var(--canopy); display: flex; flex-wrap: wrap; gap: var(--space-6); align-items: flex-start; }
+.br-stage::before, .br-stage::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+.br-stage::before { width: 200px; height: 200px; top: -60px; right: 8%; background: var(--moss); opacity: .45; }
+.br-stage::after { width: 160px; height: 160px; bottom: -70px; left: 18%; background: var(--bloom); opacity: .35; }
+.br-stage > * { position: relative; z-index: 1; }
+.br-pad { padding: var(--space-6); background: var(--canopy); display: flex; flex-wrap: wrap; gap: var(--space-6); align-items: flex-start; }
+.br-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+/* Icon + Mascot */
+.br-icon { display: inline-flex; flex: none; line-height: 0; }
+.br-icon svg { width: 100%; height: 100%; }
+.br-mascot { display: inline-block; flex: none; line-height: 0; }
+.br-mascot svg { width: 100%; height: 100%; display: block; }
+
+/* Tones: posture = moss, move = bloom, eyes/water = sky, stretch = fur */
+.br-tone-moss { --tone: var(--moss); --tone-soft: var(--moss-soft); }
+.br-tone-bloom { --tone: var(--bloom); --tone-soft: var(--bloom-soft); }
+.br-tone-sky { --tone: var(--sky); --tone-soft: var(--sky-soft); }
+.br-tone-fur { --tone: var(--fur); --tone-soft: var(--fur-soft); }
+
+/* Button */
+.br-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; box-sizing: border-box; border: 1px solid transparent; border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 600; cursor: pointer; transition: background-color 160ms ease-out, color 160ms ease-out, transform 120ms ease-out; }
+.br-btn-sm { height: 28px; padding: 0 10px; gap: 5px; }
+.br-btn:active { transform: translateY(1px); }
+.br-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.br-btn:disabled { opacity: .45; cursor: default; transform: none; }
+.br-btn-primary { background: var(--moss); color: var(--on-moss); }
+.br-btn-primary:hover:not(:disabled) { background: var(--moss-hover); }
+.br-btn-glass { background: var(--glass); border-color: var(--line); color: var(--ink); -webkit-backdrop-filter: blur(var(--blur-soft)); backdrop-filter: blur(var(--blur-soft)); }
+.br-btn-glass:hover:not(:disabled) { background: var(--glass-strong); }
+.br-btn-quiet { background: transparent; color: var(--ink-muted); }
+.br-btn-quiet:hover:not(:disabled) { color: var(--ink); }
+
+/* Chip */
+.br-chip { display: inline-flex; align-items: center; gap: var(--space-1); height: 22px; padding: 0 8px 0 6px; box-sizing: border-box; border-radius: var(--radius-pill); background: var(--tone-soft); color: var(--tone); font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap; }
+
+/* Toast: 360 wide, Brady hangs from the top edge */
+.br-toast { position: relative; width: 368px; box-sizing: border-box; padding: var(--space-4) var(--space-4) var(--space-4) 96px; min-height: 128px; background: var(--glass-strong); -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%); backdrop-filter: blur(var(--blur-glass)) saturate(140%); border: 1px solid var(--glass-edge); border-radius: var(--radius-lg); box-shadow: var(--shadow-glass); color: var(--ink); }
+.br-toast-brady { position: absolute; left: 10px; top: -4px; }
+.br-toast-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 6px; }
+.br-toast-meta { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ink-muted); }
+.br-toast-close { margin: -4px -4px 0 auto; display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-muted); cursor: pointer; }
+.br-toast-close:hover { color: var(--ink); background: var(--line); }
+.br-toast-close:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; }
+.br-toast-title { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 26px; font-weight: 600; color: var(--ink); }
+.br-toast-body { margin: 2px 0 0; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.br-toast-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+
+/* Countdown */
+.br-countdown { display: inline-flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.br-ring { position: relative; width: 96px; height: 96px; }
+.br-ring svg { display: block; transform: rotate(-90deg); }
+.br-ring circle { fill: none; stroke-width: 7; }
+.br-ring-track { stroke: var(--tone-soft); }
+.br-ring-value { stroke: var(--tone); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.br-ring-num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 28px; line-height: 32px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); }
+.br-countdown-label { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ink-muted); }
+
+/* Switch: a whole settings row is the hit target */
+.br-switch { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-3) 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.br-switch + .br-switch { border-top: 1px solid var(--line); }
+.br-switch:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-sm); }
+.br-switch:disabled { opacity: .45; cursor: default; }
+.br-switch-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.br-switch-label { font-size: 16px; line-height: 22px; font-weight: 600; }
+.br-switch-desc { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ink-muted); }
+.br-switch-track { position: relative; flex: none; width: 40px; height: 22px; box-sizing: border-box; border: 1.5px solid var(--control-line); border-radius: var(--radius-pill); transition: background-color 200ms ease-out, border-color 200ms ease-out; }
+.br-switch-thumb { position: absolute; top: 3px; left: 3px; width: 13px; height: 13px; border-radius: 50%; background: var(--ink-muted); transition: transform 220ms cubic-bezier(.3, .7, .2, 1), background-color 200ms ease-out; }
+.br-switch.is-on .br-switch-track { background: var(--moss); border-color: var(--moss); }
+.br-switch.is-on .br-switch-thumb { background: var(--on-moss); transform: translateX(18px); }
+
+/* Settings card (used in previews and the Settings window) */
+.br-card { box-sizing: border-box; padding: 4px var(--space-5); background: var(--glass); -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%); backdrop-filter: blur(var(--blur-glass)) saturate(140%); border: 1px solid var(--glass-edge); border-radius: var(--radius-lg); box-shadow: var(--shadow-glass); }
+
+@media (prefers-reduced-motion: reduce) {
+  .br-btn, .br-switch-track, .br-switch-thumb, .br-ring-value { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .br-toast, .br-card, .br-btn-glass { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
