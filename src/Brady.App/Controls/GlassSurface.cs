@@ -9,7 +9,7 @@ namespace Brady.App.Controls;
 /// <summary>
 /// A floating glass panel: glass-strong fill, 1px glass-edge, radius-lg and the shadow-glass
 /// shadow. Like the toast, the shadow is rendered once into a bitmap cache and clipped out from
-/// under the translucent fill, the way CSS box-shadow is. Used by the tray flyout.
+/// under the translucent fill, the way CSS box-shadow is. Used by the tray flyout and Settings cards.
 /// </summary>
 [ContentProperty(nameof(Child))]
 public sealed class GlassSurface : UserControl
@@ -17,6 +17,14 @@ public sealed class GlassSurface : UserControl
     public static readonly DependencyProperty ChildProperty = DependencyProperty.Register(
         nameof(Child), typeof(UIElement), typeof(GlassSurface),
         new PropertyMetadata(null, (d, e) => ((GlassSurface)d)._presenter.Content = e.NewValue));
+
+    /// <summary>
+    /// True (default) for glass-strong, used by surfaces floating over the user's wallpaper; false for
+    /// glass, used by cards inside Brady's own windows (BRAND.md: Color).
+    /// </summary>
+    public static readonly DependencyProperty StrongProperty = DependencyProperty.Register(
+        nameof(Strong), typeof(bool), typeof(GlassSurface),
+        new PropertyMetadata(true, (d, e) => ((GlassSurface)d).ApplyFill()));
 
     private const double Bleed = 64;
 
@@ -36,7 +44,7 @@ public sealed class GlassSurface : UserControl
         _shadowHost.CacheMode = new BitmapCache { SnapsToDevicePixels = true };
         _shadowHost.Children.Add(new Border { Margin = new Thickness(Bleed), Background = Brushes.Black, Effect = _far });
         _shadowHost.Children.Add(new Border { Margin = new Thickness(Bleed), Background = Brushes.Black, Effect = _near });
-        _fill.SetResourceReference(Border.BackgroundProperty, "GlassStrongBrush");
+        ApplyFill();
         _edge.SetResourceReference(Border.BorderBrushProperty, "GlassEdgeBrush");
         foreach (var border in _shadowHost.Children.OfType<Border>().Append(_fill).Append(_edge))
             border.SetResourceReference(Border.CornerRadiusProperty, "RadiusLgCorner");
@@ -54,6 +62,12 @@ public sealed class GlassSurface : UserControl
         SizeChanged += (_, _) => UpdateClip();
     }
 
+    public bool Strong
+    {
+        get => (bool)GetValue(StrongProperty);
+        set => SetValue(StrongProperty, value);
+    }
+
     public UIElement? Child
     {
         get => (UIElement?)GetValue(ChildProperty);
@@ -67,6 +81,8 @@ public sealed class GlassSurface : UserControl
         Configure(_near, "ShadowGlass2");
         UpdateClip();
     }
+
+    private void ApplyFill() => _fill.SetResourceReference(Border.BackgroundProperty, Strong ? "GlassStrongBrush" : "GlassBrush");
 
     private void Configure(DropShadowEffect effect, string token)
     {

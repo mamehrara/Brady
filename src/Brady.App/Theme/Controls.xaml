@@ -10,9 +10,31 @@
 
     <m:CubicBezierEase x:Key="CssEaseOut" X1="0" Y1="0" X2="0.58" Y2="1" />
 
+    <!-- Focus rings: a solid 2px focus-ring outline, offset 2px. As focus visuals they appear for
+         keyboard focus only (CSS :focus-visible), never after a mouse click, and never shift layout. -->
+    <Style x:Key="ButtonFocusRing">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Margin="-4" BorderThickness="2" CornerRadius="16" BorderBrush="{DynamicResource FocusRingBrush}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="RowFocusRing">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Margin="-6,0" BorderThickness="2" CornerRadius="{StaticResource RadiusSmCorner}"
+                            BorderBrush="{DynamicResource FocusRingBrush}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Button: primary / glass / quiet, md 32px / sm 28px -->
     <Style TargetType="c:BradyButton">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusRing}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="14,0" />
@@ -30,9 +52,6 @@
                         <Grid.RenderTransform>
                             <TranslateTransform x:Name="PressShift" />
                         </Grid.RenderTransform>
-                        <!-- 2px focus ring, offset 2px: drawn outside the button, so it never shifts layout -->
-                        <Border x:Name="FocusRing" Margin="-4" BorderThickness="2" CornerRadius="16"
-                                BorderBrush="{DynamicResource FocusRingBrush}" Visibility="Collapsed" />
                         <Border Background="{TemplateBinding Background}" CornerRadius="{StaticResource RadiusMdCorner}" />
                         <Border x:Name="HoverLayer" Background="{TemplateBinding HoverBackground}"
                                 CornerRadius="{StaticResource RadiusMdCorner}" Opacity="0" />
@@ -90,9 +109,6 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="FocusRing" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Root" Property="Opacity" Value="0.45" />
@@ -167,6 +183,52 @@
                 <Setter Property="Foreground" Value="{DynamicResource FurBrush}" />
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- Switch row (.br-switch): 12px vertical padding, 40x22 track, 13px thumb sliding 18px.
+         The on/off motion is driven from SwitchRow.cs, so the resting state never animates. -->
+    <Style TargetType="c:SwitchRow">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource RowFocusRing}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="c:SwitchRow">
+                    <Grid x:Name="Root" Background="Transparent">
+                        <Grid Margin="0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Text="{TemplateBinding Label}" Style="{StaticResource HeadlineText}" />
+                                <TextBlock x:Name="Desc" Text="{TemplateBinding Description}" Style="{StaticResource CaptionText}"
+                                           TextWrapping="Wrap" Margin="0,1,0,1" /><!-- 2px gap plus the caption baseline nudge -->
+                            </StackPanel>
+                            <Grid Grid.Column="1" Width="40" Height="22" VerticalAlignment="Center">
+                                <Border CornerRadius="11" BorderThickness="1.5" BorderBrush="{DynamicResource ControlLineBrush}" />
+                                <Border x:Name="OnFill" CornerRadius="11" Background="{DynamicResource MossBrush}" Opacity="0" />
+                                <Grid Width="13" Height="13" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4.5,4.5,0,0">
+                                    <Grid.RenderTransform>
+                                        <TranslateTransform x:Name="ThumbShift" />
+                                    </Grid.RenderTransform>
+                                    <Ellipse Fill="{DynamicResource InkMutedBrush}" />
+                                    <Ellipse x:Name="OnThumb" Fill="{DynamicResource OnMossBrush}" Opacity="0" />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Description" Value="{x:Null}">
+                            <Setter TargetName="Desc" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Tray menu: a glass panel (radius-md) of 32px items (radius-sm), applied per item in code. -->
