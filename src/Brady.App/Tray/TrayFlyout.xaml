@@ -28,6 +28,8 @@
         <c:GlassSurface Width="320" Padding="20">
             <StackPanel>
                 <DockPanel>
+                    <c:BradyButton DockPanel.Dock="Right" Variant="Quiet" Size="Sm" Content="Settings" VerticalAlignment="Top"
+                                   Margin="0,-2,-10,0" Click="OnSettingsClick" />
                     <Image x:Name="Head" Width="40" Height="40" Margin="0,0,12,0" VerticalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality" />
                     <StackPanel VerticalAlignment="Center">

@@ -65,6 +65,9 @@ public sealed partial class TrayController : IDisposable
     /// <summary>Quit was chosen from the menu.</summary>
     public event EventHandler? QuitRequested;
 
+    /// <summary>Settings was chosen from the menu or the flyout.</summary>
+    public event EventHandler? SettingsRequested;
+
     public void Start()
     {
         _icon = new TaskbarIcon
@@ -96,6 +99,7 @@ public sealed partial class TrayController : IDisposable
         _flyout.TakeBreakRequested += (_, _) => _presenter.TakeBreakNow();
         _flyout.PauseRequested += (_, _) => PauseFor(TimeSpan.FromMinutes(30));
         _flyout.ResumeRequested += (_, _) => Resume();
+        _flyout.SettingsRequested += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
         _flyout.Closed += (_, _) => _flyout = null;
         _flyout.Open();
     }
@@ -125,6 +129,7 @@ public sealed partial class TrayController : IDisposable
                 case TrayCommand.Pause60: PauseFor(TimeSpan.FromHours(1)); break;
                 case TrayCommand.PauseUntilTomorrow: PauseUntilTomorrow(); break;
                 case TrayCommand.Resume: Resume(); break;
+                case TrayCommand.Settings: SettingsRequested?.Invoke(this, EventArgs.Empty); break;
                 case TrayCommand.Quit: QuitAfterMenuCloses(); break;
             }
         });
@@ -141,9 +146,7 @@ public sealed partial class TrayController : IDisposable
         menu.Items.Add(Item("Pause until tomorrow", TrayCommand.PauseUntilTomorrow));
         menu.Items.Add(Item("Resume", TrayCommand.Resume));
         menu.Items.Add(new Separator { Style = (Style)Application.Current.FindResource("TrayMenuSeparator") });
-        var settings = Item("Settings…", TrayCommand.Settings);
-        settings.IsEnabled = false; // arrives in phase 3
-        menu.Items.Add(settings);
+        menu.Items.Add(Item("Settings…", TrayCommand.Settings));
         menu.Items.Add(Item("Quit", TrayCommand.Quit));
         return menu;
 

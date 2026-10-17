@@ -25,6 +25,7 @@ public partial class App : Application
     private FrameMeter? _frameMeter;
     private ReminderEngine? _engine;
     private TrayController? _tray;
+    private SettingsWindow? _settingsWindow;
     private SystemEventsBridge? _systemEvents;
 
     public App(IServiceProvider services, LaunchOptions options, SingleInstance? instance)
@@ -123,13 +124,22 @@ public partial class App : Application
 
         _tray = _services.GetRequiredService<TrayController>();
         _tray.QuitRequested += (_, _) => Shutdown();
+        _tray.SettingsRequested += (_, _) => OpenSettings();
         _tray.Start();
+
+        // Settings apply live: the engine reschedules only what changed; the theme follows.
+        var theme = _services.GetRequiredService<ThemeManager>();
+        settings.Changed += (_, _) =>
+        {
+            _engine.UpdateRules(BradyHost.RulesFor(settings.Current, _options));
+            if (_options.Theme == ThemePreference.System) theme.Preference = ToPreference(settings.Current.Theme);
+        };
 
         _engine.Start();
 
-        // Launching Brady while it's running opens the flyout (Settings, from phase 3); --quit ends it.
+        // Launching Brady while it's running opens Settings; --quit ends it.
         _instance?.Listen(
-            onActivate: () => Dispatcher.BeginInvoke(() => _tray.ShowFlyout()),
+            onActivate: () => Dispatcher.BeginInvoke(OpenSettings),
             onQuit: () => Dispatcher.BeginInvoke(() =>
             {
                 _logger.LogInformation("Quit requested by another launch");
@@ -151,6 +161,29 @@ public partial class App : Application
         })
         { IsBackground = true, Name = "Brady exit watchdog" };
         watchdog.Start();
+    }
+
+    /// <summary>One Settings window at a time, created on demand and released when closed.</summary>
+    private void OpenSettings()
+    {
+        if (_settingsWindow is not null)
+        {
+            if (_settingsWindow.WindowState == WindowState.Minimized) _settingsWindow.WindowState = WindowState.Normal;
+            _settingsWindow.Activate();
+            return;
+        }
+
+        var viewModel = new SettingsViewModel(
+            _services.GetRequiredService<SettingsService>(),
+            _services.GetRequiredService<IStartupRegistration>());
+        _settingsWindow = new SettingsWindow(viewModel, _engine!, _services.GetRequiredService<ThemeManager>());
+        _settingsWindow.Closed += (_, _) =>
+        {
+            _settingsWindow = null;
+            _services.GetRequiredService<IdleTrimmer>().Schedule();
+        };
+        _settingsWindow.Show();
+        _settingsWindow.Activate();
     }
 
     private static ThemePreference ToPreference(ThemeChoice choice) => choice switch

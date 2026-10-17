@@ -37,6 +37,8 @@ public sealed partial class TrayFlyout : Window
 
     public event EventHandler? ResumeRequested;
 
+    public event EventHandler? SettingsRequested;
+
     public void Update(EngineSnapshot snapshot, TimeZoneInfo zone)
     {
         _paused = snapshot.PausedUntil is not null;
@@ -87,6 +89,12 @@ public sealed partial class TrayFlyout : Window
     private void OnBreakClick(object sender, RoutedEventArgs e)
     {
         TakeBreakRequested?.Invoke(this, EventArgs.Empty);
+        CloseQuietly();
+    }
+
+    private void OnSettingsClick(object sender, RoutedEventArgs e)
+    {
+        SettingsRequested?.Invoke(this, EventArgs.Empty);
         CloseQuietly();
     }
 

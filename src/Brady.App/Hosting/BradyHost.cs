@@ -10,6 +10,7 @@ using Brady.Core.Activity;
 using Brady.Core.Copy;
 using Brady.Core.Quiet;
 using Brady.Core.Reminders;
+using Brady.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -57,7 +58,8 @@ public static class BradyHost
             sp.GetRequiredService<TimeProvider>(),
             sp.GetRequiredService<IActivitySource>(),
             sp.GetRequiredService<IQuietProbe>(),
-            Rules(sp.GetRequiredService<SettingsService>(), options)));
+            RulesFor(sp.GetRequiredService<SettingsService>().Current, options)));
+        builder.Services.AddSingleton<IStartupRegistration, StartupRegistration>();
         builder.Services.AddSingleton<SystemEventsBridge>();
         builder.Services.AddSingleton<ReminderPresenter>();
         builder.Services.AddSingleton<TrayController>();
@@ -73,9 +75,10 @@ public static class BradyHost
         return builder.Build();
     }
 
-    private static ReminderRules Rules(SettingsService settings, LaunchOptions options)
+    /// <summary>The engine's rules for these settings (scaled down to seconds under <c>--fast</c>).</summary>
+    public static ReminderRules RulesFor(BradySettings settings, LaunchOptions options)
     {
-        var rules = settings.Current.ToRules();
+        var rules = settings.ToRules();
         if (!options.Fast) return rules;
         var seconds = rules.Kinds.ToDictionary(
             pair => pair.Key,
