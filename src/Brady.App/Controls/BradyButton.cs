@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Brady.App.Toasts.Motion;
 
 namespace Brady.App.Controls;
 
@@ -42,9 +43,30 @@ public sealed class BradyButton : Button
     public static readonly DependencyProperty HoverBackgroundProperty = DependencyProperty.Register(
         nameof(HoverBackground), typeof(Brush), typeof(BradyButton), new PropertyMetadata(null));
 
+    private static readonly TimeSpan PressDuration = TimeSpan.FromMilliseconds(120);
+    private TranslateTransform? _pressShift;
+
     static BradyButton()
     {
         DefaultStyleKeyProperty.OverrideMetadata(typeof(BradyButton), new FrameworkPropertyMetadata(typeof(BradyButton)));
+    }
+
+    public override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        _pressShift = GetTemplateChild("PressShift") as TranslateTransform;
+    }
+
+    // Pressing nudges the button down 1px (CSS :active). It's movement, so it is skipped when
+    // Windows "Animation effects" is off.
+    protected override void OnIsPressedChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnIsPressedChanged(e);
+        if (_pressShift is null) return;
+        if (MotionSpec.FullMotion)
+            Anim.To(_pressShift, TranslateTransform.YProperty, IsPressed ? 1 : 0, PressDuration, MotionSpec.CssEaseOut);
+        else
+            Anim.Set(_pressShift, TranslateTransform.YProperty, 0);
     }
 
     public ButtonVariant Variant
