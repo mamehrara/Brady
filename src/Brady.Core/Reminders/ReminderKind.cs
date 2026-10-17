@@ -25,6 +25,16 @@ public static class ReminderKinds
     public static IReadOnlyList<ReminderKind> ByPriority { get; } =
         [ReminderKind.Move, ReminderKind.Stretch, ReminderKind.Posture, ReminderKind.Eyes, ReminderKind.Water];
 
+    /// <summary>0 for the highest priority (Move).</summary>
+    public static int Priority(ReminderKind kind) => kind switch
+    {
+        ReminderKind.Move => 0,
+        ReminderKind.Stretch => 1,
+        ReminderKind.Posture => 2,
+        ReminderKind.Eyes => 3,
+        _ => 4,
+    };
+
     public static Tone ToneOf(this ReminderKind kind) => kind switch
     {
         ReminderKind.Posture => Tone.Moss,
