@@ -1,5 +1,6 @@
 using System.Windows.Threading;
 using Brady.App.Platform;
+using Brady.App.Settings;
 using Brady.App.Toasts;
 using Brady.Core.Copy;
 using Brady.Core.Reminders;
@@ -15,6 +16,7 @@ public sealed partial class ReminderPresenter(
     ReminderEngine engine,
     ToastStackManager toasts,
     CopyDeck copy,
+    SettingsService settings,
     SoftSound sound,
     ILogger<ReminderPresenter> logger)
 {
@@ -42,7 +44,8 @@ public sealed partial class ReminderPresenter(
             CopyDeck.Meta(due.Kind, rule.Interval, due.SittingFor),
             AllowSkip: true,
             CopyDeck.AfterDone(due.Kind, rule.Interval),
-            rule.Snooze);
+            rule.Snooze,
+            Guided: GuidedFor(due.Kind));
 
         sound.PlayIfEnabled();
         var outcome = await toasts.ShowAsync(content);
@@ -54,6 +57,14 @@ public sealed partial class ReminderPresenter(
             ToastOutcome.Dismissed => ReminderOutcome.Dismissed,
             _ => ReminderOutcome.Missed,
         });
+    }
+
+    // Eyes and Stretch come with a short guided break, timed by the length chosen in Settings.
+    private GuidedBreak? GuidedFor(ReminderKind kind)
+    {
+        if (settings.Current.Kinds[kind].GuidedSeconds is not { } seconds) return null;
+        var label = kind == ReminderKind.Eyes ? "Look across the room" : "Hold the reach";
+        return new GuidedBreak(TimeSpan.FromSeconds(seconds), label);
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Due reminders dropped while quiet: {Reason}")]

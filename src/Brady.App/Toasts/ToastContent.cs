@@ -21,10 +21,15 @@ public sealed record ToastContent(
     bool AllowSkip,
     ReminderCopy DoneCopy,
     TimeSpan Snooze,
-    ToastOffer? Offer = null)
+    ToastOffer? Offer = null,
+    GuidedBreak? Guided = null)
 {
     public static readonly TimeSpan DefaultSnooze = TimeSpan.FromMinutes(10);
 }
+
+/// <summary>A guided break offered by the toast ("Start 20s"): a countdown ring that ends in Done.</summary>
+/// <param name="Label">One line under the ring, such as "Look across the room".</param>
+public sealed record GuidedBreak(TimeSpan Length, string Label);
 
 /// <summary>Labels for a yes/no toast; "yes" is the primary button, "no" the glass one.</summary>
 public sealed record ToastOffer(string Yes, string No);
@@ -46,4 +51,7 @@ public enum ToastAction
     Snooze,
     Skip,
     Close,
+
+    /// <summary>"Start 20s": run the guided break in place.</summary>
+    StartGuided,
 }

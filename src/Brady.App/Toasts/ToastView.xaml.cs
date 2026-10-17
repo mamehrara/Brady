@@ -72,6 +72,7 @@ public sealed partial class ToastView : UserControl
         SetCopy(DoneTitle, DoneBody, content.DoneCopy);
         SetCopy(SnoozeTitle, SnoozeBody, CopyDeck.AfterSnooze(content.Snooze));
         SnoozeButton.Content = content.Offer?.No ?? $"Snooze {content.Snooze.TotalMinutes:0} min";
+        PrepareGuided(content);
         DoneButton.Content = content.Offer?.Yes ?? "Done";
         SkipButton.Visibility = content.AllowSkip ? Visibility.Visible : Visibility.Collapsed;
         Actions.Visibility = showActions ? Visibility.Visible : Visibility.Collapsed;
@@ -84,6 +85,7 @@ public sealed partial class ToastView : UserControl
         Anim.Set(CardShift, TranslateTransform.YProperty, 0);
         Anim.Set(StackShift, TranslateTransform.YProperty, 0);
         Anim.Set(HoverShadowHost, OpacityProperty, 0);
+        Anim.Set(Guided, OpacityProperty, 0);
         Anim.Set(Prompt, OpacityProperty, 1);
         Anim.Set(DoneReply, OpacityProperty, 0);
         Anim.Set(SnoozeReply, OpacityProperty, 0);
@@ -146,10 +148,40 @@ public sealed partial class ToastView : UserControl
             CrossFadeMoodAsync(mood, moodFade),
             Anim.To(Prompt, OpacityProperty, 0, fade, MotionSpec.Settle),
             Anim.To(reply, OpacityProperty, 1, fade, MotionSpec.Settle),
-            Anim.To(Actions, OpacityProperty, 0, fade, MotionSpec.Settle));
+            Anim.To(Actions, OpacityProperty, 0, fade, MotionSpec.Settle),
+            Anim.To(Guided, OpacityProperty, 0, fade, MotionSpec.Settle));
 
         await Task.Delay(hold);
     }
+
+    /// <summary>
+    /// "Start 20s": the text and actions cross-fade to the countdown ring in place, the ring runs
+    /// down, and the returned task completes when it is empty. The close button stays live.
+    /// </summary>
+    public async Task PlayGuidedAsync(TimeSpan length)
+    {
+        SetActionsEnabled(false);
+        CloseButton.IsEnabled = true;
+        var fade = MotionSpec.FullMotion ? MotionSpec.TextCrossFade : MotionSpec.ReducedFade;
+        await Task.WhenAll(
+            Anim.To(Prompt, OpacityProperty, 0, fade, MotionSpec.Settle),
+            Anim.To(Actions, OpacityProperty, 0, fade, MotionSpec.Settle),
+            Anim.To(Guided, OpacityProperty, 1, fade, MotionSpec.Settle));
+        await Guided.RunAsync(length);
+    }
+
+    /// <summary>The countdown state as a still frame, for <c>--snapshot</c>.</summary>
+    public void ShowGuidedStill(TimeSpan left)
+    {
+        if (Shown?.Guided is not { } guided) return;
+        Anim.Set(Prompt, OpacityProperty, 0);
+        Anim.Set(Actions, OpacityProperty, 0);
+        Anim.Set(Guided, OpacityProperty, 1);
+        Guided.ShowStill(left, guided.Length);
+    }
+
+    /// <summary>Stops a running guided break (the toast was closed).</summary>
+    public void StopGuided() => Guided.Stop();
 
     /// <summary>Fades out while sinking 10px and shrinking slightly.</summary>
     public Task PlayExitAsync()
@@ -244,7 +276,7 @@ public sealed partial class ToastView : UserControl
 
     private void SetActionsEnabled(bool enabled)
     {
-        DoneButton.IsEnabled = SnoozeButton.IsEnabled = SkipButton.IsEnabled = enabled;
+        DoneButton.IsEnabled = GuidedButton.IsEnabled = SnoozeButton.IsEnabled = SkipButton.IsEnabled = enabled;
         CloseButton.IsEnabled = enabled;
         Actions.IsHitTestVisible = enabled;
     }
@@ -322,6 +354,21 @@ public sealed partial class ToastView : UserControl
     private void OnDoneClick(object sender, RoutedEventArgs e) => ActionInvoked?.Invoke(this, ToastAction.Done);
 
     private void OnSnoozeClick(object sender, RoutedEventArgs e) => ActionInvoked?.Invoke(this, ToastAction.Snooze);
+
+    private void OnGuidedClick(object sender, RoutedEventArgs e) => ActionInvoked?.Invoke(this, ToastAction.StartGuided);
+
+    private void PrepareGuided(ToastContent content)
+    {
+        // With a guided break, "Start 20s" is the toast's one primary action and finishing the break
+        // counts as Done, so Done itself steps aside (decided with the owner over Button.md's rule).
+        var guided = content.Guided;
+        DoneButton.Visibility = guided is null ? Visibility.Visible : Visibility.Collapsed;
+        GuidedButton.Visibility = guided is null ? Visibility.Collapsed : Visibility.Visible;
+        Guided.Visibility = guided is null ? Visibility.Collapsed : Visibility.Visible;
+        if (guided is null) return;
+        GuidedButton.Content = $"Start {guided.Length.TotalSeconds:0}s";
+        Guided.Prepare(content.Kind, guided.Length, guided.Label);
+    }
 
     private void OnSkipClick(object sender, RoutedEventArgs e) => ActionInvoked?.Invoke(this, ToastAction.Skip);
 

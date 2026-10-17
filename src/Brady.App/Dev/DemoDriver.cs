@@ -27,6 +27,7 @@ public sealed partial class DemoDriver(ToastStackManager toasts, CopyDeck copy, 
                 await Step(ReminderKind.Eyes, "20-20-20", ToastAction.Snooze);
                 await Step(ReminderKind.Move, "52 min still", ToastAction.Skip, allowSkip: true);
                 await Step(ReminderKind.Stretch, "Every 90 min", action: null);
+                await GuidedStep();
                 await StackedStep();
             }
             while (loop);
@@ -46,6 +47,21 @@ public sealed partial class DemoDriver(ToastStackManager toasts, CopyDeck copy, 
             await Task.Delay(Read);
             toasts.Newest?.Invoke(a);
         }
+        await shown;
+        await Task.Delay(Pause);
+    }
+
+    // Eyes with its guided break: Start, the ring runs down (shortened to 6 seconds), then Brady cheers.
+    private async Task GuidedStep()
+    {
+        LogStep("Eyes", "guided break");
+        var content = Content(ReminderKind.Eyes, "20-20-20", allowSkip: true) with
+        {
+            Guided = new GuidedBreak(TimeSpan.FromSeconds(6), "Look across the room"),
+        };
+        var shown = toasts.ShowAsync(content);
+        await Task.Delay(Read);
+        toasts.Newest?.Invoke(ToastAction.StartGuided);
         await shown;
         await Task.Delay(Pause);
     }

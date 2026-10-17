@@ -99,11 +99,18 @@
             <WrapPanel x:Name="Actions" Grid.Row="2" Margin="0,12,0,0">
                 <c:BradyButton x:Name="DoneButton" Variant="Primary" Size="Sm" Icon="{StaticResource IconCheck}"
                                Focusable="False" Margin="0,0,8,0" Content="Done" Click="OnDoneClick" />
+                <c:BradyButton x:Name="GuidedButton" Variant="Primary" Size="Sm" Visibility="Collapsed"
+                               Focusable="False" Margin="0,0,8,0" Content="Start 20s" Click="OnGuidedClick" />
                 <c:BradyButton x:Name="SnoozeButton" Variant="Glass" Size="Sm"
                                Focusable="False" Margin="0,0,8,0" Content="Snooze 10 min" Click="OnSnoozeClick" />
                 <c:BradyButton x:Name="SkipButton" Variant="Quiet" Size="Sm"
                                Focusable="False" Content="Skip" Click="OnSkipClick" />
             </WrapPanel>
+
+            <!-- Guided break: the ring takes the place of the text and actions. It sits in the same rows
+                 from the start (invisible), so the card is already tall enough and nothing jumps. -->
+            <c:Countdown x:Name="Guided" Grid.Row="1" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Top"
+                         Margin="0,2,0,0" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed" />
         </Grid>
 
         <Border x:Name="CardEdge" CornerRadius="{StaticResource RadiusLgCorner}" BorderThickness="1"

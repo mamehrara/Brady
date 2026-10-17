@@ -54,9 +54,27 @@ public sealed partial class SnapshotRenderer(
             }
             LogRendered(path);
 
+            await RenderGuidedAsync(directory, preference);
             await RenderTrayAsync(directory, preference);
             await RenderSettingsAsync(directory, preference);
         }
+    }
+
+    // An Eyes toast offering its guided break, and a Stretch toast mid-countdown.
+    private async Task RenderGuidedAsync(string directory, ThemePreference preference)
+    {
+        var stage = BuildBackdrop();
+        var canvas = (Canvas)stage.Children[0];
+        var eyes = new ToastContent(ReminderKind.Eyes, CopyDeck.LinesFor(ReminderKind.Eyes)[0], "20-20-20", true,
+            CopyDeck.AfterDone(ReminderKind.Eyes, TimeSpan.FromMinutes(20)), ToastContent.DefaultSnooze,
+            Guided: new GuidedBreak(TimeSpan.FromSeconds(20), "Look across the room"));
+        var stretch = new ToastContent(ReminderKind.Stretch, CopyDeck.LinesFor(ReminderKind.Stretch)[0], "Every 90 min", false,
+            CopyDeck.AfterDone(ReminderKind.Stretch, TimeSpan.FromMinutes(90)), ToastContent.DefaultSnooze,
+            Guided: new GuidedBreak(TimeSpan.FromSeconds(15), "Hold the reach"));
+        AddToast(canvas, eyes, 24, 32);
+        var running = AddToast(canvas, stretch, 416, 32);
+        running.ShowGuidedStill(TimeSpan.FromSeconds(9));
+        await Save(stage, System.IO.Path.Combine(directory, $"Guided-{preference.ToString().ToLowerInvariant()}.png"));
     }
 
     // The tray menu and flyout side by side on the same stand-in desktop.
@@ -221,7 +239,7 @@ public sealed partial class SnapshotRenderer(
         canvas.Children.Add(circle);
     }
 
-    private static void AddToast(Canvas canvas, ToastContent content, double left, double top, bool showActions = true, MascotMood mood = MascotMood.Awake)
+    private static ToastView AddToast(Canvas canvas, ToastContent content, double left, double top, bool showActions = true, MascotMood mood = MascotMood.Awake)
     {
         var view = new ToastView();
         view.ApplyShadowTokens();
@@ -230,6 +248,7 @@ public sealed partial class SnapshotRenderer(
         Canvas.SetLeft(view, left);
         Canvas.SetTop(view, top);
         canvas.Children.Add(view);
+        return view;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Settings page {PageHeight} DIP, stage {StageHeight} px")]

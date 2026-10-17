@@ -128,6 +128,20 @@ public sealed partial class ToastStackManager
         LogShown(content.Kind.ToString(), height);
 
         var action = await toast.Action;
+
+        // "Start 20s": no timeout while the break runs; it ends in Done unless the toast is closed.
+        if (action == ToastAction.StartGuided && content.Guided is { } guided)
+        {
+            var closed = toast.Rearm();
+            var run = view.PlayGuidedAsync(guided.Length);
+            if (await Task.WhenAny(run, closed) == run) action = ToastAction.Done;
+            else
+            {
+                view.StopGuided();
+                action = ToastAction.Close;
+            }
+        }
+
         var outcome = action switch
         {
             ToastAction.Done => ToastOutcome.Done,
@@ -203,10 +217,11 @@ public sealed partial class ToastStackManager
     /// <summary>A toast on screen: its slot in the stack, its pausable timeout and the pending user action.</summary>
     private sealed class ActiveToast
     {
-        private readonly TaskCompletionSource<ToastAction?> _action = new();
+        private TaskCompletionSource<ToastAction?> _action = new();
         private readonly DispatcherTimer _timer = new(DispatcherPriority.Normal);
         private readonly Stopwatch _running = new();
         private TimeSpan _remaining;
+        private bool _untimed;
 
         public ActiveToast(ToastView view, double height, TimeSpan timeout)
         {
@@ -236,6 +251,15 @@ public sealed partial class ToastStackManager
             _running.Restart();
         }
 
+        /// <summary>Stops the timeout and waits for a fresh action (the close button during a guided break).</summary>
+        public Task<ToastAction?> Rearm()
+        {
+            _timer.Stop();
+            _untimed = true;
+            _action = new TaskCompletionSource<ToastAction?>();
+            return _action.Task;
+        }
+
         public void Resolve(ToastAction? action)
         {
             _timer.Stop();
@@ -257,7 +281,7 @@ public sealed partial class ToastStackManager
         // Hovering pauses the countdown; leaving resumes it with whatever time was left.
         private void OnHover(object? sender, bool hovering)
         {
-            if (_action.Task.IsCompleted) return;
+            if (_action.Task.IsCompleted || _untimed) return;
             if (hovering)
             {
                 _timer.Stop();
