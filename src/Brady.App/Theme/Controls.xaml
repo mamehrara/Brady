@@ -169,6 +169,65 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Tray menu: a glass panel (radius-md) of 32px items (radius-sm), applied per item in code. -->
+    <Style x:Key="TrayMenu" TargetType="ContextMenu">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="FontFamily" Value="{StaticResource SansFontFamily}" />
+        <Setter Property="FontSize" Value="{StaticResource BodyFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Margin="10,6,10,14" Padding="4" CornerRadius="{StaticResource RadiusMdCorner}"
+                            Background="{DynamicResource GlassStrongBrush}" BorderBrush="{DynamicResource GlassEdgeBrush}"
+                            BorderThickness="1">
+                        <Border.Effect>
+                            <!-- The menu never animates, so a live shadow is fine here. -->
+                            <DropShadowEffect Direction="270" ShadowDepth="6" BlurRadius="20" Opacity="0.22" />
+                        </Border.Effect>
+                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TrayMenuItem" TargetType="MenuItem">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Foreground" Value="{DynamicResource InkBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="Bg" Height="32" MinWidth="208" Padding="12,0" Background="Transparent"
+                            CornerRadius="{StaticResource RadiusSmCorner}">
+                        <ContentPresenter ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource LineBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TrayMenuSeparator" TargetType="Separator">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Height="1" Margin="8,4" Background="{DynamicResource LineBrush}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Toast close: 28px square, radius-sm, 14px close icon -->
     <Style x:Key="ToastCloseButton" TargetType="Button">
         <Setter Property="Focusable" Value="False" />
