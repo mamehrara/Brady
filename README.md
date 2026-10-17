@@ -10,12 +10,19 @@ The nudges come from Brady, a three-toed sloth who hangs from the top edge of ev
 
 *Rendered with `Brady.exe --snapshot`, using the layout of the design reference screens.*
 
+Brady lives in the notification area. Hover for what's next ("Brady · next: Eyes in 7 min"), left-click for the flyout, right-click to pause.
+
+| Light | Dark |
+| --- | --- |
+| ![Tray menu and flyout, light theme](docs/images/tray-light.png) | ![Tray menu and flyout, dark theme](docs/images/tray-dark.png) |
+
 ## What it does
 
 - **Five reminder kinds:** Posture, Move, Eyes (the 20-20-20 rule), Stretch and Water. Each has its own interval.
 - **Sitting time counts only while you're at the PC.** Locking the screen or stepping away for a few minutes resets the "you've been sitting" timers.
 - **Never nags.** Brady leaves at least a few minutes between reminders, shows one at a time when several are due, and stays quiet during fullscreen apps, presentations, Focus sessions and your quiet hours.
 - **Small glass toasts** in the corner of your screen. They never take keyboard focus, so you can keep typing while one is up.
+- **Pause when you need to:** for 30 minutes, an hour, or until tomorrow morning, from the tray. A pause survives a restart.
 - **Light on resources.** About 13 MB working set and 0% CPU while idle, with no browser engine inside.
 
 ## Status
@@ -25,8 +32,8 @@ Brady is being built in phases:
 | Phase | What | State |
 | --- | --- | --- |
 | 1 | Design system and the animated toast | done |
-| 2 | Reminder engine and tray icon | next |
-| 3 | Settings (per-reminder timing) | |
+| 2 | Reminder engine and tray icon | done |
+| 3 | Settings (per-reminder timing) | next |
 | 4 | Guided breaks and polish | |
 | 5 | Installer | |
 
@@ -52,7 +59,7 @@ The app ends up in `src/Brady.App/bin/Release/net10.0-windows/Brady.exe`.
 | Path | What's there |
 | --- | --- |
 | `src/Brady.Core` | Reminder logic and copy. No WPF and no Win32, so it's fully unit-testable. |
-| `src/Brady.App` | The WPF app: theme, controls, toasts, and (later) the tray and Settings. |
+| `src/Brady.App` | The WPF app: theme, controls, toasts, the tray, and (later) Settings. |
 | `tests/Brady.Core.Tests` | xUnit tests for Core. |
 | `tools/` | Generators that turn `design/` into XAML. |
 | `design/` | The brand book, tokens, reference screens, art and fonts. This is the source of truth for every color and size. |
@@ -77,9 +84,12 @@ Add `-- --check` to either command to verify that the committed files are up to 
 | `--fps` | Shows a frame-time overlay and logs dropped frames while toasts are on screen. |
 | `--theme light\|dark` | Overrides the Windows app theme. |
 | `--reduced-motion` | Previews the reduced-motion path (plain fades) without changing Windows settings. |
+| `--fast` | Real reminders with minutes turned into seconds (intervals, gap and snooze), to see the whole pipeline in under a minute. |
+| `--quit` | Asks a running Brady to exit cleanly. |
+| `--background` | Used by the Windows startup entry; Brady starts straight into the tray either way. |
 | `--hardware` | Uses GPU rendering. Software rendering is the default because it's just as smooth for Brady's small windows and uses far less memory. |
 
-Logs are written to `%LocalAppData%\Brady\logs`.
+Logs are written to `%LocalAppData%\Brady\logs`; settings live in `%AppData%\Brady\settings.json`.
 
 ## License
 
