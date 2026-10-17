@@ -15,7 +15,7 @@ public static class Program
         var options = LaunchOptions.Parse(args);
 
         // Snapshots are a dev tool and may run beside a live Brady; everything else is single-instance.
-        using var instance = options.SnapshotDirectory is null ? SingleInstance.TryAcquire() : null;
+        using var instance = options.SnapshotDirectory is null ? SingleInstance.TryAcquire(options.Quit) : null;
         if (instance is null && options.SnapshotDirectory is null) return 0;
 
         // Must run before any Timeline exists: cap every animation clock at 60fps.

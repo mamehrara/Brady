@@ -24,6 +24,21 @@ public sealed record LaunchOptions
     /// </summary>
     public bool HardwareRendering { get; init; }
 
+    /// <summary>
+    /// <c>--background</c>: used by the Windows startup entry. Brady always starts straight into the
+    /// tray with no window, so today this only marks how it was launched.
+    /// </summary>
+    public bool Background { get; init; }
+
+    /// <summary>
+    /// <c>--fast</c>: real reminders with minutes turned into seconds (intervals, gap, snooze), to
+    /// check the whole pipeline quickly. The idle threshold stays real.
+    /// </summary>
+    public bool Fast { get; init; }
+
+    /// <summary><c>--quit</c>: asks a running Brady to exit cleanly, then exits (used by the installer).</summary>
+    public bool Quit { get; init; }
+
     /// <summary><c>--snapshot &lt;dir&gt;</c>: render the reference-screen grid in light and dark to PNGs, then exit.</summary>
     public string? SnapshotDirectory { get; init; }
 
@@ -42,6 +57,9 @@ public sealed record LaunchOptions
                 "--fps" => options with { Fps = true },
                 "--reduced-motion" => options with { ReducedMotion = true },
                 "--hardware" => options with { HardwareRendering = true },
+                "--background" => options with { Background = true },
+                "--fast" => options with { Fast = true },
+                "--quit" => options with { Quit = true },
                 "--snapshot" when i + 1 < args.Count => options with { SnapshotDirectory = args[++i] },
                 "--theme" when i + 1 < args.Count => options with { Theme = Enum.Parse<ThemePreference>(args[++i], ignoreCase: true) },
                 _ => options,

@@ -1,9 +1,15 @@
 using System.IO;
 using Brady.App.Dev;
 using Brady.App.Platform;
+using Brady.App.Reminders;
+using Brady.App.Settings;
 using Brady.App.Theme;
 using Brady.App.Toasts;
+using Brady.App.Tray;
+using Brady.Core.Activity;
 using Brady.Core.Copy;
+using Brady.Core.Quiet;
+using Brady.Core.Reminders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -42,6 +48,20 @@ public static class BradyHost
         builder.Services.AddSingleton(options);
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddSingleton<CopyDeck>();
+        builder.Services.AddSingleton<SettingsService>();
+
+        // Reminders: the Core engine fed by Windows' input and notification state.
+        builder.Services.AddSingleton<IActivitySource, WindowsActivitySource>();
+        builder.Services.AddSingleton<IQuietProbe, WindowsQuietProbe>();
+        builder.Services.AddSingleton(sp => new ReminderEngine(
+            sp.GetRequiredService<TimeProvider>(),
+            sp.GetRequiredService<IActivitySource>(),
+            sp.GetRequiredService<IQuietProbe>(),
+            Rules(sp.GetRequiredService<SettingsService>(), options)));
+        builder.Services.AddSingleton<SystemEventsBridge>();
+        builder.Services.AddSingleton<ReminderPresenter>();
+        builder.Services.AddSingleton<TrayController>();
+
         builder.Services.AddSingleton<ThemeManager>();
         builder.Services.AddSingleton<IdleTrimmer>();
         builder.Services.AddSingleton<ToastHostWindow>();
@@ -51,5 +71,15 @@ public static class BradyHost
         builder.Services.AddSingleton<SnapshotRenderer>();
 
         return builder.Build();
+    }
+
+    private static ReminderRules Rules(SettingsService settings, LaunchOptions options)
+    {
+        var rules = settings.Current.ToRules();
+        if (!options.Fast) return rules;
+        var seconds = rules.Kinds.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value with { Interval = pair.Value.Interval / 60, Snooze = pair.Value.Snooze / 60 });
+        return rules with { Kinds = seconds, MinGap = rules.MinGap / 60 };
     }
 }
