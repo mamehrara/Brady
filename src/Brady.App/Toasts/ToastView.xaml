@@ -1,0 +1,136 @@
+<!--
+    The reminder toast, ported from .br-toast. Layers, back to front:
+      shadow (cached bitmap) > hover shadow (cached, faded in on hover) > glass fill > content > glass edge > Brady.
+    Only Opacity and RenderTransform are ever animated here; the card's size is fixed before it appears.
+-->
+<UserControl x:Class="Brady.App.Toasts.ToastView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Brady.App.Controls"
+             Width="368"
+             Focusable="False"
+             UseLayoutRounding="True"
+             TextOptions.TextFormattingMode="Ideal"
+             TextOptions.TextRenderingMode="Grayscale"
+             TextOptions.TextHintingMode="Animated">
+    <!-- Animated hinting: otherwise WPF re-rasterizes all text at static quality a moment after
+         the motion settles, which costs a visible frame on every toast. -->
+
+    <Grid x:Name="CardRoot" RenderTransformOrigin="0.5,1">
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform x:Name="CardScale" />
+                <TranslateTransform x:Name="CardShift" />
+                <TranslateTransform x:Name="StackShift" />
+            </TransformGroup>
+        </Grid.RenderTransform>
+
+        <!-- shadow-glass: two soft layers, rasterised once into a bitmap cache and only transformed after that.
+             The clip removes the shadow under the translucent card, like CSS box-shadow. -->
+        <Grid x:Name="ShadowHost" Margin="-64" IsHitTestVisible="False">
+            <Grid.CacheMode>
+                <BitmapCache SnapsToDevicePixels="True" />
+            </Grid.CacheMode>
+            <Border Margin="64" CornerRadius="{StaticResource RadiusLgCorner}" Background="Black">
+                <Border.Effect>
+                    <DropShadowEffect x:Name="FarShadow" Direction="270" RenderingBias="Quality" />
+                </Border.Effect>
+            </Border>
+            <Border Margin="64" CornerRadius="{StaticResource RadiusLgCorner}" Background="Black">
+                <Border.Effect>
+                    <DropShadowEffect x:Name="NearShadow" Direction="270" RenderingBias="Quality" />
+                </Border.Effect>
+            </Border>
+        </Grid>
+
+        <!-- Hover: a deeper copy of the shadow, cross-faded in. No movement. -->
+        <Grid x:Name="HoverShadowHost" Margin="-64" IsHitTestVisible="False" Opacity="0">
+            <Grid.CacheMode>
+                <BitmapCache SnapsToDevicePixels="True" />
+            </Grid.CacheMode>
+            <Border Margin="64" CornerRadius="{StaticResource RadiusLgCorner}" Background="Black">
+                <Border.Effect>
+                    <DropShadowEffect x:Name="HoverShadow" Direction="270" RenderingBias="Quality" />
+                </Border.Effect>
+            </Border>
+        </Grid>
+
+        <!-- glass-strong fill, drawn under the 1px edge like CSS's border-box background -->
+        <Border x:Name="CardFill" CornerRadius="{StaticResource RadiusLgCorner}"
+                Background="{DynamicResource GlassStrongBrush}" />
+
+        <Grid x:Name="Layout" Margin="97,17,17,17" MinHeight="94">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Head: chip, meta, close. 24px tall: the close button hangs 4px above and right, as in CSS. -->
+            <DockPanel x:Name="Head" Grid.Row="0" Height="24" Margin="0,0,0,6" LastChildFill="True">
+                <Button x:Name="CloseButton" DockPanel.Dock="Right" Style="{StaticResource ToastCloseButton}"
+                        Margin="0,-4,-4,0" VerticalAlignment="Top" Click="OnCloseClick" />
+                <c:Chip x:Name="KindChip" VerticalAlignment="Center" />
+                <TextBlock x:Name="Meta" Style="{StaticResource CaptionText}" Margin="8,-1,0,1"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+
+            <!-- Body margins are CSS margin-top 2px plus the 2px baseline nudge from Typography.xaml.
+                 The prompt and both replies share one cell, so the card is sized for all of them before it
+                 appears and a click never causes a layout pass. -->
+            <Grid Grid.Row="1">
+                <StackPanel x:Name="Prompt">
+                    <TextBlock x:Name="PromptTitle" Style="{StaticResource TitleText}" />
+                    <TextBlock x:Name="PromptBody" Style="{StaticResource BodyText}" Margin="0,0,0,2"
+                               Foreground="{DynamicResource InkMutedBrush}" />
+                </StackPanel>
+                <StackPanel x:Name="DoneReply" Opacity="0" IsHitTestVisible="False">
+                    <TextBlock x:Name="DoneTitle" Style="{StaticResource TitleText}" />
+                    <TextBlock x:Name="DoneBody" Style="{StaticResource BodyText}" Margin="0,0,0,2"
+                               Foreground="{DynamicResource InkMutedBrush}" />
+                </StackPanel>
+                <StackPanel x:Name="SnoozeReply" Opacity="0" IsHitTestVisible="False">
+                    <TextBlock x:Name="SnoozeTitle" Style="{StaticResource TitleText}" />
+                    <TextBlock x:Name="SnoozeBody" Style="{StaticResource BodyText}" Margin="0,0,0,2"
+                               Foreground="{DynamicResource InkMutedBrush}" />
+                </StackPanel>
+            </Grid>
+
+            <WrapPanel x:Name="Actions" Grid.Row="2" Margin="0,12,0,0">
+                <c:BradyButton x:Name="DoneButton" Variant="Primary" Size="Sm" Icon="{StaticResource IconCheck}"
+                               Focusable="False" Margin="0,0,8,0" Content="Done" Click="OnDoneClick" />
+                <c:BradyButton x:Name="SnoozeButton" Variant="Glass" Size="Sm"
+                               Focusable="False" Margin="0,0,8,0" Content="Snooze 10 min" Click="OnSnoozeClick" />
+                <c:BradyButton x:Name="SkipButton" Variant="Quiet" Size="Sm"
+                               Focusable="False" Content="Skip" Click="OnSkipClick" />
+            </WrapPanel>
+        </Grid>
+
+        <Border x:Name="CardEdge" CornerRadius="{StaticResource RadiusLgCorner}" BorderThickness="1"
+                BorderBrush="{DynamicResource GlassEdgeBrush}" IsHitTestVisible="False" />
+
+        <!-- Brady hangs from the top edge: 80x80 at left 10, top -4 inside the 1px border (CSS absolute
+             positioning is relative to the padding box), claws over the edge.
+             He rotates around the claws (top-center). Two images cross-fade between moods. -->
+        <Grid x:Name="Brady" Width="80" Height="80" Margin="11,-3,0,0"
+              HorizontalAlignment="Left" VerticalAlignment="Top"
+              RenderTransformOrigin="0.5,0" IsHitTestVisible="False">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <RotateTransform x:Name="BradySway" />
+                    <TranslateTransform x:Name="BradyDrop" />
+                </TransformGroup>
+            </Grid.RenderTransform>
+            <Image x:Name="MascotFront" RenderOptions.BitmapScalingMode="HighQuality">
+                <Image.CacheMode>
+                    <BitmapCache SnapsToDevicePixels="True" />
+                </Image.CacheMode>
+            </Image>
+            <Image x:Name="MascotBack" Opacity="0" RenderOptions.BitmapScalingMode="HighQuality">
+                <Image.CacheMode>
+                    <BitmapCache SnapsToDevicePixels="True" />
+                </Image.CacheMode>
+            </Image>
+        </Grid>
+    </Grid>
+</UserControl>
