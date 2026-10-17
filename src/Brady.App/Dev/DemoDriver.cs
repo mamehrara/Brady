@@ -67,7 +67,7 @@ public sealed partial class DemoDriver(ToastStackManager toasts, CopyDeck copy, 
     }
 
     private ToastContent Content(ReminderKind kind, string meta, bool allowSkip) =>
-        new(kind, copy.Draw(kind), meta, allowSkip, CopyDeck.AfterDone(kind, DemoInterval(kind)));
+        new(kind, copy.Draw(kind), meta, allowSkip, CopyDeck.AfterDone(kind, DemoInterval(kind)), ToastContent.DefaultSnooze);
 
     private static TimeSpan DemoInterval(ReminderKind kind) => TimeSpan.FromMinutes(kind switch
     {

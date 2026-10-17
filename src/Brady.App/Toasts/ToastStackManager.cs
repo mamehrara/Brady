@@ -63,7 +63,7 @@ public sealed partial class ToastStackManager
         }
 
         var sample = new ToastContent(Core.Reminders.ReminderKind.Posture, new ReminderCopy("Sit tall for a sec", "Warming up."),
-            "Every 30 min", AllowSkip: true, new ReminderCopy("Nice.", "Logged."));
+            "Every 30 min", AllowSkip: true, new ReminderCopy("Nice.", "Logged."), ToastContent.DefaultSnooze);
         _host.PlaceOffscreen();
         foreach (var view in _pool)
         {

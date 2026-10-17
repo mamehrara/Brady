@@ -9,12 +9,17 @@ namespace Brady.App.Toasts;
 /// <param name="Meta">Optional caption next to the chip, such as "Every 30 min" or "52 min still".</param>
 /// <param name="AllowSkip">Shows the quiet Skip button.</param>
 /// <param name="DoneCopy">The confirmation Brady cross-fades to after Done.</param>
+/// <param name="Snooze">How long Snooze pushes the reminder back (its button label and reply say so).</param>
 public sealed record ToastContent(
     ReminderKind Kind,
     ReminderCopy Copy,
     string? Meta,
     bool AllowSkip,
-    ReminderCopy DoneCopy);
+    ReminderCopy DoneCopy,
+    TimeSpan Snooze)
+{
+    public static readonly TimeSpan DefaultSnooze = TimeSpan.FromMinutes(10);
+}
 
 /// <summary>What the user did with a toast (or that they didn't).</summary>
 public enum ToastOutcome

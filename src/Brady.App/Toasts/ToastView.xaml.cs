@@ -69,7 +69,8 @@ public sealed partial class ToastView : UserControl
         Meta.Text = content.Meta ?? "";
         SetCopy(PromptTitle, PromptBody, content.Copy);
         SetCopy(DoneTitle, DoneBody, content.DoneCopy);
-        SetCopy(SnoozeTitle, SnoozeBody, CopyDeck.AfterSnooze);
+        SetCopy(SnoozeTitle, SnoozeBody, CopyDeck.AfterSnooze(content.Snooze));
+        SnoozeButton.Content = $"Snooze {content.Snooze.TotalMinutes:0} min";
         SkipButton.Visibility = content.AllowSkip ? Visibility.Visible : Visibility.Collapsed;
         Actions.Visibility = showActions ? Visibility.Visible : Visibility.Collapsed;
         SetActionsEnabled(true);
