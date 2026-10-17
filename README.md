@@ -81,6 +81,8 @@ Add `-- --check` to either command to verify that the committed files are up to 
 
 Logs are written to `%LocalAppData%\Brady\logs`.
 
-## Fonts
+## License
 
-Brady uses [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Figtree](https://fonts.google.com/specimen/Figtree). Both are licensed under the SIL Open Font License 1.1; see `design/fonts/OFL-*.txt`.
+Brady's code is released under the [MIT License](LICENSE).
+
+It uses the [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Figtree](https://fonts.google.com/specimen/Figtree) fonts, which are licensed separately under the SIL Open Font License 1.1; see `design/fonts/OFL-*.txt`.
