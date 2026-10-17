@@ -67,7 +67,20 @@ public sealed class CopyDeck
             _ => "Logged.",
         });
 
-    public static ReminderCopy AfterSnooze { get; } = new("Okay. I'll hang here.", "Back in 10 minutes.");
+    /// <summary>What Brady says after Snooze.</summary>
+    public static ReminderCopy AfterSnooze(TimeSpan snooze) =>
+        new("Okay. I'll hang here.", $"Back in {snooze.TotalMinutes:0} minutes.");
+
+    /// <summary>
+    /// The caption beside the chip: the schedule in plain words, or for Move how long the user has
+    /// been sitting ("52 min still").
+    /// </summary>
+    public static string Meta(ReminderKind kind, TimeSpan interval, TimeSpan sittingFor) => kind switch
+    {
+        ReminderKind.Move => $"{Math.Max(1, (int)sittingFor.TotalMinutes)} min still",
+        ReminderKind.Eyes when interval == TimeSpan.FromMinutes(20) => "20-20-20",
+        _ => interval == TimeSpan.FromHours(1) ? "Every hour" : $"Every {interval.TotalMinutes:0} min",
+    };
 
     private static string FormatMinutes(TimeSpan span) =>
         span.TotalMinutes >= 60 && span.TotalMinutes % 60 == 0
