@@ -3,5 +3,7 @@
   <PropertyGroup>
     <!-- Dev scripts: culture-invariant by construction. -->
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Scripts pin their own packages with #:package. -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
 </Project>
