@@ -66,11 +66,13 @@ public sealed partial class ToastView : UserControl
     {
         Shown = content;
         KindChip.Kind = content.Kind;
+        KindChip.Visibility = content.Offer is null ? Visibility.Visible : Visibility.Collapsed;
         Meta.Text = content.Meta ?? "";
         SetCopy(PromptTitle, PromptBody, content.Copy);
         SetCopy(DoneTitle, DoneBody, content.DoneCopy);
         SetCopy(SnoozeTitle, SnoozeBody, CopyDeck.AfterSnooze(content.Snooze));
-        SnoozeButton.Content = $"Snooze {content.Snooze.TotalMinutes:0} min";
+        SnoozeButton.Content = content.Offer?.No ?? $"Snooze {content.Snooze.TotalMinutes:0} min";
+        DoneButton.Content = content.Offer?.Yes ?? "Done";
         SkipButton.Visibility = content.AllowSkip ? Visibility.Visible : Visibility.Collapsed;
         Actions.Visibility = showActions ? Visibility.Visible : Visibility.Collapsed;
         SetActionsEnabled(true);

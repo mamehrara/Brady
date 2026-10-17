@@ -39,6 +39,9 @@ public sealed class BradySettings
     /// <summary>Set while paused from the tray, so "until tomorrow" survives a restart.</summary>
     public DateTimeOffset? PausedUntil { get; set; }
 
+    /// <summary>The one-time "Start with Windows?" question has been asked (uninstalled builds only).</summary>
+    public bool StartupOffered { get; set; }
+
     public static BradySettings CreateDefault() => new();
 
     public static KindSettings DefaultsFor(ReminderKind kind)
@@ -120,6 +123,7 @@ public sealed class BradySettings
         Theme = Theme,
         Sound = Sound,
         PausedUntil = PausedUntil,
+        StartupOffered = StartupOffered,
     };
 
     private static Dictionary<ReminderKind, KindSettings> DefaultKinds() =>

@@ -3,6 +3,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Brady.App.Hosting;
+using Brady.App.Platform;
 using Microsoft.Extensions.Hosting;
 
 namespace Brady.App;
@@ -13,6 +14,7 @@ public static class Program
     public static int Main(string[] args)
     {
         var options = LaunchOptions.Parse(args);
+        AppIdentity.Apply();
 
         // Snapshots are a dev tool and may run beside a live Brady; everything else is single-instance.
         using var instance = options.SnapshotDirectory is null ? SingleInstance.TryAcquire(options.Quit) : null;

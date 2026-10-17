@@ -146,6 +146,7 @@ public partial class App : Application
                 Shutdown();
             }));
         _logger.LogInformation("Brady is running in the tray");
+        _ = _services.GetRequiredService<StartupOffer>().MaybeOfferAsync();
     }
 
     /// <summary>

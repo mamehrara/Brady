@@ -137,7 +137,8 @@ public sealed partial class ToastStackManager
             _ => ToastOutcome.TimedOut,
         };
 
-        if (outcome is ToastOutcome.Done or ToastOutcome.Snoozed)
+        // Brady answers Done and Snooze; declining an offer just lets the toast go.
+        if (outcome is ToastOutcome.Done || (outcome is ToastOutcome.Snoozed && content.Offer is null))
             await view.PlayResolveAsync(outcome);
 
         toast.Leaving = true;

@@ -60,6 +60,7 @@ public static class BradyHost
             sp.GetRequiredService<IQuietProbe>(),
             RulesFor(sp.GetRequiredService<SettingsService>().Current, options)));
         builder.Services.AddSingleton<IStartupRegistration, StartupRegistration>();
+        builder.Services.AddSingleton<StartupOffer>();
         builder.Services.AddSingleton<SystemEventsBridge>();
         builder.Services.AddSingleton<ReminderPresenter>();
         builder.Services.AddSingleton<TrayController>();

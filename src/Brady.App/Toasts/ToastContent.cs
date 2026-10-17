@@ -10,16 +10,24 @@ namespace Brady.App.Toasts;
 /// <param name="AllowSkip">Shows the quiet Skip button.</param>
 /// <param name="DoneCopy">The confirmation Brady cross-fades to after Done.</param>
 /// <param name="Snooze">How long Snooze pushes the reminder back (its button label and reply say so).</param>
+/// <param name="Offer">
+/// Set for the one-time "Start with Windows?" question instead of a reminder: no chip, custom
+/// button labels, and no reply when the user declines.
+/// </param>
 public sealed record ToastContent(
     ReminderKind Kind,
     ReminderCopy Copy,
     string? Meta,
     bool AllowSkip,
     ReminderCopy DoneCopy,
-    TimeSpan Snooze)
+    TimeSpan Snooze,
+    ToastOffer? Offer = null)
 {
     public static readonly TimeSpan DefaultSnooze = TimeSpan.FromMinutes(10);
 }
+
+/// <summary>Labels for a yes/no toast; "yes" is the primary button, "no" the glass one.</summary>
+public sealed record ToastOffer(string Yes, string No);
 
 /// <summary>What the user did with a toast (or that they didn't).</summary>
 public enum ToastOutcome
