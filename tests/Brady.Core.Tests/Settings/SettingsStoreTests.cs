@@ -40,7 +40,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(40, loaded.Kinds[ReminderKind.Eyes].IntervalMinutes);
         Assert.Equal("23:30", loaded.QuietHours.Start);
         Assert.Equal(ThemeChoice.Dark, loaded.Theme);
-        Assert.Contains("\"version\": 1", File.ReadAllText(FilePath), StringComparison.Ordinal);
+        Assert.Contains("\"version\": 2", File.ReadAllText(FilePath), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -61,8 +61,8 @@ public sealed class SettingsStoreTests : IDisposable
         using var store = new SettingsStore(FilePath, _time);
         var settings = store.Load();
 
-        Assert.Equal(BradySettings.MinIntervalMinutes, settings.Kinds[ReminderKind.Posture].IntervalMinutes);
-        Assert.Equal(BradySettings.MaxIntervalMinutes, settings.Kinds[ReminderKind.Eyes].IntervalMinutes);
+        Assert.Equal(SettingsChoices.MinIntervalMinutes, settings.Kinds[ReminderKind.Posture].IntervalMinutes);
+        Assert.Equal(SettingsChoices.MaxIntervalMinutes, settings.Kinds[ReminderKind.Eyes].IntervalMinutes);
         Assert.Equal(50, settings.Kinds[ReminderKind.Move].IntervalMinutes); // missing: default
         Assert.Equal(QuietHoursSettings.DefaultStart, settings.QuietHours.Start);
         Assert.Equal("07:00", settings.QuietHours.End);
@@ -108,6 +108,55 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void A_version_1_file_is_migrated_to_version_2()
+    {
+        File.WriteAllText(FilePath, """
+            {
+              "version": 1,
+              "kinds": { "eyes": { "enabled": true, "intervalMinutes": 30 }, "stretch": { "enabled": false, "intervalMinutes": 120 } },
+              "quietHours": { "enabled": false, "start": "23:00", "end": "07:00" }
+            }
+            """);
+        using var store = new SettingsStore(FilePath, _time);
+        var settings = store.Load();
+
+        Assert.Equal(2, settings.Version);
+        Assert.Equal(30, settings.Kinds[ReminderKind.Eyes].IntervalMinutes);
+        Assert.Equal(10, settings.Kinds[ReminderKind.Eyes].SnoozeMinutes);
+        Assert.Equal(20, settings.Kinds[ReminderKind.Eyes].GuidedSeconds);
+        Assert.Equal(15, settings.Kinds[ReminderKind.Stretch].GuidedSeconds);
+        Assert.Null(settings.Kinds[ReminderKind.Posture].GuidedSeconds);
+        Assert.Equal(5, settings.IdleThresholdMinutes);
+        Assert.Equal(4, settings.MinGapMinutes);
+        Assert.False(settings.QuietHours.Enabled);
+    }
+
+    [Fact]
+    public void Odd_timing_values_snap_to_the_nearest_choice()
+    {
+        File.WriteAllText(FilePath, """
+            {
+              "version": 2,
+              "kinds": {
+                "eyes": { "enabled": true, "intervalMinutes": 20, "snoozeMinutes": 7, "guidedSeconds": 26 },
+                "posture": { "enabled": true, "intervalMinutes": 30, "snoozeMinutes": 99, "guidedSeconds": 40 }
+              },
+              "idleThresholdMinutes": 0,
+              "minGapMinutes": 500
+            }
+            """);
+        using var store = new SettingsStore(FilePath, _time);
+        var settings = store.Load();
+
+        Assert.Equal(5, settings.Kinds[ReminderKind.Eyes].SnoozeMinutes);
+        Assert.Equal(30, settings.Kinds[ReminderKind.Eyes].GuidedSeconds);
+        Assert.Equal(30, settings.Kinds[ReminderKind.Posture].SnoozeMinutes);
+        Assert.Null(settings.Kinds[ReminderKind.Posture].GuidedSeconds); // Posture has no guided break
+        Assert.Equal(SettingsChoices.MinIdleThresholdMinutes, settings.IdleThresholdMinutes);
+        Assert.Equal(SettingsChoices.MaxGapMinutes, settings.MinGapMinutes);
+    }
+
+    [Fact]
     public void Settings_become_scheduler_rules()
     {
         var settings = BradySettings.CreateDefault();
@@ -115,8 +164,14 @@ public sealed class SettingsStoreTests : IDisposable
         settings.Kinds[ReminderKind.Water].IntervalMinutes = 45;
         settings.QuietHours.Enabled = false;
 
+        settings.Kinds[ReminderKind.Water].SnoozeMinutes = 15;
+        settings.IdleThresholdMinutes = 8;
+        settings.MinGapMinutes = 6;
+
         var rules = settings.ToRules();
-        Assert.Equal(new KindRule(true, TimeSpan.FromMinutes(45), TimeSpan.FromMinutes(10)), rules[ReminderKind.Water]);
+        Assert.Equal(new KindRule(true, TimeSpan.FromMinutes(45), TimeSpan.FromMinutes(15)), rules[ReminderKind.Water]);
         Assert.False(rules.QuietHours.Enabled);
+        Assert.Equal(TimeSpan.FromMinutes(8), rules.IdleThreshold);
+        Assert.Equal(TimeSpan.FromMinutes(6), rules.MinGap);
     }
 }

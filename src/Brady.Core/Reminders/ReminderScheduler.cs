@@ -36,13 +36,19 @@ public sealed class ReminderScheduler
     /// <summary>Longest sleep between ticks, so a clock change is never missed for long.</summary>
     public static readonly TimeSpan MaxSleep = TimeSpan.FromHours(1);
 
+    /// <summary>
+    /// When a settings change makes a reminder due right away, it comes this long after the change
+    /// instead: never the instant a slider moves.
+    /// </summary>
+    public static readonly TimeSpan SettleAfterChange = TimeSpan.FromMinutes(1);
+
     private readonly Dictionary<ReminderKind, KindState> _kinds = [];
     private readonly TimeZoneInfo _zone;
     private ReminderRules _rules;
     private bool _idle, _locked, _asleep;
     private DateTimeOffset _idleSince;
     private DateTimeOffset _returnedAt;
-    private DateTimeOffset? _nextAllowedAt;
+    private DateTimeOffset? _lastShownAt;
 
     public ReminderScheduler(ReminderRules rules, DateTimeOffset now, TimeZoneInfo? zone = null)
     {
@@ -89,7 +95,7 @@ public sealed class ReminderScheduler
                 foreach (var kind in due) Reset(kind, now);
                 dropped = quiet;
             }
-            else if (_nextAllowedAt is not { } allowed || now >= allowed)
+            else if (NextAllowedAt is not { } allowed || now >= allowed)
             {
                 show = Begin(due[0], now);
             }
@@ -146,14 +152,37 @@ public sealed class ReminderScheduler
         foreach (var kind in _kinds.Keys) Reset(kind, now);
     }
 
-    /// <summary>Applies new settings. A kind that is switched on starts its interval from now.</summary>
+    /// <summary>
+    /// Applies new settings, touching only the kinds whose rules changed.
+    /// <list type="bullet">
+    /// <item>A kind switched on starts its interval from now.</item>
+    /// <item>A new interval keeps the time already counted; if that already exceeds the new interval,
+    ///   the reminder comes <see cref="SettleAfterChange"/> from now, never immediately.</item>
+    /// <item>Snooze length, idle threshold and minimum gap apply from the next use.</item>
+    /// </list>
+    /// </summary>
     public void UpdateRules(ReminderRules rules, DateTimeOffset now)
     {
         var previous = _rules;
         _rules = rules;
-        foreach (var kind in _kinds.Keys)
+        foreach (var (kind, state) in _kinds)
         {
-            if (rules[kind].Enabled && !previous[kind].Enabled) Reset(kind, now);
+            KindRule before = previous[kind], after = rules[kind];
+            if (after.Enabled && !before.Enabled)
+            {
+                Reset(kind, now);
+            }
+            else if (after.Enabled && after.Interval != before.Interval && state.SnoozedUntil is null)
+            {
+                var earliest = after.Interval - SettleAfterChange;
+                var counted = SittingFor(kind, now);
+                if (counted > earliest)
+                {
+                    // Re-anchor so the reminder is due one minute from now (or from the user's return).
+                    state.Accrued = earliest;
+                    if (state.RunningSince is not null) state.RunningSince = now;
+                }
+            }
         }
     }
 
@@ -177,9 +206,12 @@ public sealed class ReminderScheduler
     private ReminderDue Begin(ReminderKind kind, DateTimeOffset now)
     {
         _kinds[kind].InFlight = true;
-        _nextAllowedAt = now + _rules.MinGap;
+        _lastShownAt = now;
         return new ReminderDue(kind, SittingFor(kind, now));
     }
+
+    // Derived, so a changed minimum gap applies at once.
+    private DateTimeOffset? NextAllowedAt => _lastShownAt + _rules.MinGap;
 
     private List<ReminderKind> DueKinds(DateTimeOffset now) =>
         ReminderKinds.ByPriority
@@ -195,7 +227,7 @@ public sealed class ReminderScheduler
 
     // A due time can't be earlier than the minimum gap after the last reminder.
     private DateTimeOffset? Gated(DateTimeOffset? due) =>
-        due is { } d && _nextAllowedAt is { } allowed && allowed > d ? allowed : due;
+        due is { } d && NextAllowedAt is { } allowed && allowed > d ? allowed : due;
 
     private DateTimeOffset? DueAt(ReminderKind kind, KindState state)
     {

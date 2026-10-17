@@ -10,7 +10,7 @@ namespace Brady.Core.Settings;
 public static class SettingsMigrator
 {
     // Steps[n] migrates version n+1 to n+2. Add a step whenever CurrentVersion is bumped.
-    private static readonly Func<JsonObject, JsonObject>[] Steps = [];
+    private static readonly Func<JsonObject, JsonObject>[] Steps = [V1ToV2];
 
     public static JsonObject Migrate(JsonObject root)
     {
@@ -23,6 +23,25 @@ public static class SettingsMigrator
             root = Steps[v - 1](root);
             root["version"] = v + 1;
         }
+        return root;
+    }
+
+    // v2 adds per-kind snooze and guided-break lengths, the idle threshold and the minimum gap,
+    // all with the values v1 used implicitly.
+    private static JsonObject V1ToV2(JsonObject root)
+    {
+        if (root["kinds"] is JsonObject kinds)
+        {
+            foreach (var (name, node) in kinds)
+            {
+                if (node is not JsonObject kind) continue;
+                kind["snoozeMinutes"] ??= SettingsChoices.DefaultSnoozeMinutes;
+                var guided = name switch { "eyes" => 20, "stretch" => 15, _ => (int?)null };
+                if (guided is { } seconds) kind["guidedSeconds"] ??= seconds;
+            }
+        }
+        root["idleThresholdMinutes"] ??= SettingsChoices.DefaultIdleThresholdMinutes;
+        root["minGapMinutes"] ??= SettingsChoices.DefaultGapMinutes;
         return root;
     }
 }
