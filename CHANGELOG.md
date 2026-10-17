@@ -2,6 +2,48 @@
 
 All notable changes to Brady are recorded here. Each build phase gets its own section and its own `phase-N` git tag.
 
+## [0.3.0] - Phase 3: Settings and per-reminder timing - 2026-10-17
+
+### Added
+- A Settings window on canopy with glass cards. It opens from the tray menu, the flyout, or by launching Brady again. The header shows Brady's head, "Brady" in `display` and "Today: N breaks taken". The title bar is tinted to match.
+- One card per reminder:
+  - an on/off switch;
+  - an interval picker: preset buttons (Posture 20/30/45/60, Eyes 20/30/40, Move 30/45/50/60/90, Stretch 60/90/120, Water 30/45/60/90) plus Custom, with a 5–240 minute stepper. Move's is labelled "After sitting for";
+  - snooze length (5/10/15/30 min);
+  - guided-break length for Eyes (20/30 s) and Stretch (15/30/45 s);
+  - a live status line ("Next in 12 min", "Off", "Paused");
+  - Reset.
+- A General card:
+  - quiet hours, which may cross midnight;
+  - "Count me as away after" (the idle threshold, default 5 min);
+  - the gap between reminders (default 4 min);
+  - theme (System, Light, Dark), switching live;
+  - soft sound (stored; the sound itself arrives in phase 4);
+  - Start with Windows, which reads and writes the real HKCU Run value `Brady` = `"…\Brady.exe" --background`.
+- Reset to defaults per card, for the General card, and for everything, each with Undo in a small toast instead of a confirmation dialog.
+- New controls: a switch row, a segmented choice row (chips stay non-clickable), a stepper, and tabular digits (Fredoka has no `tnum`, so digits are drawn in fixed-width cells).
+- `--snapshot` also renders the Settings page.
+
+### Changed
+- Settings schema v2:
+  - adds per-kind snooze and guided-break lengths, the idle threshold and the minimum gap;
+  - v1 files migrate automatically;
+  - odd hand-edited values snap to the nearest allowed choice.
+- Settings changes reschedule only the affected kind. A new interval keeps the time already counted; if that already exceeds the new interval, the reminder comes one minute later, never immediately. A changed minimum gap applies at once.
+- Focus rings appear for keyboard focus only, never after a mouse click.
+
+### Tests
+- 93 Core tests, adding:
+  - an interval change mid-countdown;
+  - an already-elapsed interval;
+  - disable and re-enable;
+  - per-kind snooze length;
+  - custom quiet hours across midnight;
+  - idle threshold changes both ways;
+  - the minimum gap;
+  - v1→v2 migration;
+  - snapping odd values.
+
 ## [0.2.0] - Phase 2: reminder engine and tray - 2026-10-17
 
 ### Added
