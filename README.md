@@ -41,12 +41,20 @@ Brady is being built in phases:
 | 1 | Design system and the animated toast | done |
 | 2 | Reminder engine and tray icon | done |
 | 3 | Settings (per-reminder timing) | done |
-| 5 | Installer | next |
-| 4 | Guided breaks and polish | after the installer |
+| 5 | Installer and GitHub Releases | done |
+| 4 | Guided breaks and polish | next |
 
 ## Install
 
-A per-user installer (no admin rights needed) arrives in phase 5. Until then, build from source as described below.
+1. Download **Brady-Setup-x.y.z.exe** from the [latest release](https://github.com/mamehrara/Brady/releases/latest).
+2. Run it. Brady installs just for you, into `%LocalAppData%\Programs\Brady`, with no admin rights needed and no .NET to install first.
+3. Choose whether Brady starts with Windows (on by default; you can change it any time in Settings), then launch him from the last page.
+
+Brady then lives in the notification area, by the clock. If Windows tucks new icons away, drag him out of the `^` overflow.
+
+**"Windows protected your PC"?** The installer isn't code-signed yet, so Microsoft Defender SmartScreen may warn about an unrecognized app. Click **More info**, then **Run anyway**.
+
+To update, run a newer installer over the old one: it closes Brady, keeps your settings and your startup choice, and starts him again. To remove Brady, use **Settings → Apps → Installed apps → Brady → Uninstall**. It asks whether to keep your settings.
 
 ## Build from source
 
@@ -61,6 +69,27 @@ dotnet test --project tests/Brady.Core.Tests
 
 The app ends up in `src/Brady.App/bin/Release/net10.0-windows/Brady.exe`.
 
+### Building the installer
+
+Install [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`winget install JRSoftware.InnoSetup`), then:
+
+```powershell
+.\build\build-installer.ps1
+```
+
+This runs the tests, publishes a self-contained win-x64 build and writes `artifacts\Brady-Setup-<version>.exe`. The version comes from `<Version>` in `Directory.Build.props`, the only place it is set.
+
+### Releasing
+
+Bump `<Version>` in `Directory.Build.props`, add a section to `CHANGELOG.md`, commit, then push a matching tag:
+
+```powershell
+git tag -a v0.5.0 -m "Brady 0.5.0"
+git push origin v0.5.0
+```
+
+The [Release workflow](.github/workflows/release.yml) builds the installer on GitHub and publishes it on the Releases page, with that version's changelog as the notes.
+
 ### Project layout
 
 | Path | What's there |
@@ -68,7 +97,8 @@ The app ends up in `src/Brady.App/bin/Release/net10.0-windows/Brady.exe`.
 | `src/Brady.Core` | Reminder logic and copy. No WPF and no Win32, so it's fully unit-testable. |
 | `src/Brady.App` | The WPF app: theme, controls, toasts, the tray and Settings. |
 | `tests/Brady.Core.Tests` | xUnit tests for Core. |
-| `tools/` | Generators that turn `design/` into XAML. |
+| `tools/` | Generators that turn `design/` into XAML and the installer's wizard art. |
+| `build/` | The Inno Setup script, its wizard art, and `build-installer.ps1`. |
 | `design/` | The brand book, tokens, reference screens, art and fonts. This is the source of truth for every color and size. |
 
 ### Regenerating the theme

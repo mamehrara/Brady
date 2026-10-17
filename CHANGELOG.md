@@ -2,6 +2,31 @@
 
 All notable changes to Brady are recorded here. Each build phase gets its own section and its own `phase-N` git tag.
 
+## [0.5.0] - Phase 5: installer and GitHub Releases - 2026-10-17
+
+The first installable release. (Phase 4, guided breaks and polish, comes next.)
+
+### Added
+- A per-user installer (Inno Setup 6):
+  - It needs no admin prompt and no .NET install: it installs a self-contained win-x64 build into `%LocalAppData%\Programs\Brady`. The installer is about 45 MB and installs 146 MB.
+  - The wizard is branded with Brady's app icon, canopy and the moss and bloom circles.
+  - Tasks: "Start Brady when Windows starts" (checked) and "Create a desktop shortcut" (unchecked). The finish page has "Launch Brady now".
+  - It uses the same HKCU Run entry as Settings, so the two never disagree.
+  - A Start menu shortcut with Brady's AppUserModelID.
+- Upgrades:
+  - Setup closes a running Brady through its quit event and starts it again afterwards.
+  - Settings and the startup choice are kept, including a choice changed in Settings since the last install.
+- Uninstall:
+  - It closes Brady and removes the startup entry (whoever created it), the shortcuts and the logs.
+  - It asks whether to delete your settings; the default is to keep them.
+- `build/build-installer.ps1`: tests, publish, then `artifacts/Brady-Setup-<version>.exe`. The version comes only from `Directory.Build.props`.
+- A GitHub Actions release workflow: pushing a `v*` tag that matches the version builds the installer and attaches it to a GitHub Release.
+- An uninstalled (dev or portable) Brady asks once, "Start with Windows?", with Yes and Not now.
+- `tools/installer-art.cs` generates the wizard images from `design/`.
+
+### Fixed
+- Launching Brady again now brings Settings to the front instead of opening it behind other windows.
+
 ## [0.3.0] - Phase 3: Settings and per-reminder timing - 2026-10-17
 
 ### Added
