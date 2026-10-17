@@ -46,6 +46,34 @@ internal static partial class NativeMethods
         public uint dwFlags;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LASTINPUTINFO
+    {
+        public uint cbSize;
+        public uint dwTime;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetLastInputInfo(ref LASTINPUTINFO info);
+
+    // QUERY_USER_NOTIFICATION_STATE
+    public const int QUNS_NOT_PRESENT = 1;
+    public const int QUNS_BUSY = 2;
+    public const int QUNS_RUNNING_D3D_FULL_SCREEN = 3;
+    public const int QUNS_PRESENTATION_MODE = 4;
+    public const int QUNS_ACCEPTS_NOTIFICATIONS = 5;
+    public const int QUNS_QUIET_TIME = 6;
+    public const int QUNS_APP = 7;
+
+    [LibraryImport("shell32.dll")]
+    public static partial int SHQueryUserNotificationState(out int state);
+
+    public const int SM_CXSMICON = 49;
+
+    [LibraryImport("user32.dll")]
+    public static partial int GetSystemMetrics(int index);
+
     [LibraryImport("kernel32.dll")]
     public static partial nint GetCurrentProcess();
 

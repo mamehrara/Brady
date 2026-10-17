@@ -5,6 +5,14 @@ namespace Brady.App.Platform;
 
 internal static class WindowStyles
 {
+    /// <summary>Keeps a popup-like window out of Alt-Tab and the taskbar (it may still take focus).</summary>
+    public static void MakeToolWindow(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        var ex = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);
+        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, (ex | NativeMethods.WS_EX_TOOLWINDOW) & ~NativeMethods.WS_EX_APPWINDOW);
+    }
+
     /// <summary>
     /// Makes a window a non-activating tool window: it never takes focus (not even on click)
     /// and never appears in Alt-Tab or the taskbar.
