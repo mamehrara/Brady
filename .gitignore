@@ -1,0 +1,21 @@
+# Build output
+bin/
+obj/
+artifacts/
+publish/
+TestResults/
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Runtime data: never commit logs or anyone's settings
+logs/
+*.log
+settings.json
+
+# Dev tool output (--snapshot); README screenshots live in docs/images
+/snapshots/

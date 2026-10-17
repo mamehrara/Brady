@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Brady.App/Brady.App.csproj" />
+    <Project Path="src/Brady.Core/Brady.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Brady.Core.Tests/Brady.Core.Tests.csproj" />
+  </Folder>
+</Solution>
