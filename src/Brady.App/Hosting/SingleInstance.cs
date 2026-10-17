@@ -33,7 +33,13 @@ public sealed class SingleInstance : IDisposable
         var quitEvent = new EventWaitHandle(false, EventResetMode.AutoReset, $@"Local\{MutexName}-quit");
         if (createdNew && !quit) return new SingleInstance(mutex, activate, quitEvent);
 
-        if (!createdNew) (quit ? quitEvent : activate).Set();
+        if (!createdNew)
+        {
+            // Let the running Brady bring Settings to the front; Windows' foreground lock would
+            // otherwise keep it behind whatever the user is doing.
+            if (!quit) Platform.NativeMethods.AllowSetForegroundWindow(Platform.NativeMethods.ASFW_ANY);
+            (quit ? quitEvent : activate).Set();
+        }
         activate.Dispose();
         quitEvent.Dispose();
         if (createdNew) mutex.ReleaseMutex();

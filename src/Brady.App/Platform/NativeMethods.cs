@@ -78,6 +78,12 @@ internal static partial class NativeMethods
 
     public static void SetDwmInt(nint hwnd, int attribute, int value) => DwmSetWindowAttribute(hwnd, attribute, ref value, sizeof(int));
 
+    public const int ASFW_ANY = -1;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AllowSetForegroundWindow(int processId);
+
     public const int SM_CXSMICON = 49;
 
     [LibraryImport("user32.dll")]
