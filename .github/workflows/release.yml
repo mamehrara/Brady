@@ -1,0 +1,62 @@
+# Builds the installer and publishes it as a GitHub Release when a version tag is pushed:
+#   git tag -a v0.5.0 -m "Brady 0.5.0" && git push origin v0.5.0
+# The tag must match <Version> in Directory.Build.props.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # create the release and upload the installer
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Check the tag matches the version
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ("v$version" -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} does not match <Version>$version</Version> in Directory.Build.props."
+          }
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer (tests, publish, compile)
+        shell: pwsh
+        run: ./build/build-installer.ps1
+
+      - name: Write release notes
+        shell: pwsh
+        run: |
+          # This version's section of CHANGELOG.md, plus how to get past SmartScreen.
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -SimpleMatch "## [$env:VERSION]" | Select-Object -First 1).LineNumber
+          $notes = @()
+          if ($start) {
+            foreach ($line in $lines[$start..($lines.Count - 1)]) {
+              if ($line.StartsWith('## [')) { break }
+              $notes += $line
+            }
+          }
+          $notes += ''
+          $notes += '### Installing'
+          $notes += "Download **Brady-Setup-$env:VERSION.exe** below and run it. It installs just for you, with no admin rights needed."
+          $notes += ''
+          $notes += 'The installer is not code-signed yet, so Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**.'
+          $notes | Set-Content -Encoding utf8 release-notes.md
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" "artifacts/Brady-Setup-$env:VERSION.exe" --title "Brady $env:VERSION" --notes-file release-notes.md
