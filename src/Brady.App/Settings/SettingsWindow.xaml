@@ -1,0 +1,190 @@
+<!--
+    Brady's Settings, on canopy with glass cards. One card per reminder kind (on/off, interval,
+    snooze, guided-break length, live status, reset) and a General card. Every control writes
+    through at once; there is no Save button.
+-->
+<Window x:Class="Brady.App.Settings.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:Brady.App.Controls"
+        xmlns:s="clr-namespace:Brady.App.Settings"
+        Title="Brady settings"
+        Width="640" Height="860" MinWidth="560" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource CanopyBrush}"
+        Foreground="{DynamicResource InkBrush}"
+        FontFamily="{StaticResource SansFontFamily}"
+        FontSize="{StaticResource BodyFontSize}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal"
+        Icon="pack://application:,,,/Brady;component/Icons/brady-app.ico">
+
+    <Window.Resources>
+        <!-- A label column and a control column inside a card. -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+            <Setter Property="Width" Value="132" />
+            <Setter Property="Margin" Value="0,0,12,4" /><!-- 2px rhythm plus the body baseline nudge -->
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Foreground" Value="{DynamicResource InkMutedBrush}" />
+            <Setter Property="Padding" Value="0,4,0,0" />
+        </Style>
+        <Style x:Key="Hairline" TargetType="Border">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource LineBrush}" />
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource TitleText}">
+            <Setter Property="Margin" Value="0,7,0,11" />
+        </Style>
+
+        <DataTemplate x:Key="KindCard" DataType="{x:Type s:KindViewModel}">
+            <c:GlassSurface Strong="False" Padding="20,4" Margin="0,0,0,24">
+                <StackPanel>
+                    <c:SwitchRow Label="{Binding Title}" Description="{Binding Description}" IsChecked="{Binding Enabled}" />
+                    <Border Style="{StaticResource Hairline}" />
+
+                    <StackPanel Margin="0,14,0,6" IsEnabled="{Binding Enabled}">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.45" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <DockPanel>
+                            <TextBlock Text="{Binding IntervalLabel}" Style="{StaticResource FieldLabel}" />
+                            <StackPanel>
+                                <c:ChoiceRow Choices="{Binding IntervalChoices}" SelectedValue="{Binding IntervalChoice}" />
+                                <c:Stepper Large="True" Unit="min" Minimum="5" Maximum="240" Step="5" Margin="0,2,0,10"
+                                           HorizontalAlignment="Left" Value="{Binding IntervalMinutes}">
+                                    <c:Stepper.Style>
+                                        <Style TargetType="c:Stepper">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCustom}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </c:Stepper.Style>
+                                </c:Stepper>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <DockPanel>
+                            <TextBlock Text="Snooze for" Style="{StaticResource FieldLabel}" />
+                            <c:ChoiceRow Choices="{Binding SnoozeChoices}" SelectedValue="{Binding SnoozeChoice}" />
+                        </DockPanel>
+
+                        <DockPanel>
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasGuidedBreak}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+                            <TextBlock Text="Guided break" Style="{StaticResource FieldLabel}" />
+                            <c:ChoiceRow Choices="{Binding GuidedChoices}" SelectedValue="{Binding GuidedChoice}" />
+                        </DockPanel>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource Hairline}" />
+                    <DockPanel Height="44">
+                        <c:BradyButton DockPanel.Dock="Right" Variant="Quiet" Size="Sm" Content="Reset" Command="{Binding ResetCommand}"
+                                       VerticalAlignment="Center" Margin="0,0,-10,0" />
+                        <TextBlock Text="{Binding Status}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
+                    </DockPanel>
+                </StackPanel>
+            </c:GlassSurface>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False" CanContentScroll="False">
+            <StackPanel x:Name="Page" Margin="32,28,32,32">
+                <!-- Header: Brady's head, his name in display, and today's tally (breaks taken only). -->
+                <DockPanel Margin="0,0,0,28">
+                    <Image Source="{StaticResource MascotHeadAwake}" Width="56" Height="56" Margin="0,0,16,0"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Brady" Style="{StaticResource DisplayText}" />
+                        <TextBlock Text="{Binding TodayLine}" Style="{StaticResource CaptionText}" />
+                    </StackPanel>
+                </DockPanel>
+
+                <TextBlock Text="Reminders" Style="{StaticResource SectionTitle}" />
+                <ItemsControl ItemsSource="{Binding Kinds}" ItemTemplate="{StaticResource KindCard}" Focusable="False" />
+
+                <TextBlock Text="General" Style="{StaticResource SectionTitle}" />
+                <c:GlassSurface Strong="False" Padding="20,4">
+                    <StackPanel>
+                        <c:SwitchRow Label="Quiet hours" Description="Brady stays silent overnight" IsChecked="{Binding QuietHoursEnabled}" />
+                        <DockPanel Margin="0,0,0,14" IsEnabled="{Binding QuietHoursEnabled}">
+                            <TextBlock Text="From" Style="{StaticResource FieldLabel}" />
+                            <StackPanel Orientation="Horizontal">
+                                <c:Stepper Wrap="True" Minimum="0" Maximum="1439" Step="15" Value="{Binding QuietStart}" />
+                                <TextBlock Text="to" Style="{StaticResource BodyText}" Foreground="{DynamicResource InkMutedBrush}"
+                                           VerticalAlignment="Center" Margin="12,0" />
+                                <c:Stepper Wrap="True" Minimum="0" Maximum="1439" Step="15" Value="{Binding QuietEnd}" />
+                            </StackPanel>
+                        </DockPanel>
+                        <Border Style="{StaticResource Hairline}" />
+
+                        <DockPanel Margin="0,14,0,8">
+                            <TextBlock Text="Count me as away after" Style="{StaticResource FieldLabel}" TextWrapping="Wrap" />
+                            <c:Stepper Unit="min" Minimum="1" Maximum="30" Value="{Binding IdleThresholdMinutes}" HorizontalAlignment="Left" />
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,14">
+                            <TextBlock Text="Gap between reminders" Style="{StaticResource FieldLabel}" TextWrapping="Wrap" />
+                            <c:Stepper Unit="min" Minimum="1" Maximum="30" Value="{Binding MinGapMinutes}" HorizontalAlignment="Left" />
+                        </DockPanel>
+                        <Border Style="{StaticResource Hairline}" />
+
+                        <DockPanel Margin="0,14,0,6">
+                            <TextBlock Text="Theme" Style="{StaticResource FieldLabel}" />
+                            <c:ChoiceRow Choices="{Binding ThemeChoices}" SelectedValue="{Binding Theme}" />
+                        </DockPanel>
+                        <Border Style="{StaticResource Hairline}" />
+
+                        <c:SwitchRow Label="Soft sound" Description="A quiet tick when Brady arrives" IsChecked="{Binding Sound}" />
+                        <Border Style="{StaticResource Hairline}" />
+                        <c:SwitchRow Label="Start with Windows" Description="Brady waits in the tray from sign-in" IsChecked="{Binding StartWithWindows}" />
+                        <Border Style="{StaticResource Hairline}" />
+
+                        <DockPanel Height="44">
+                            <c:BradyButton DockPanel.Dock="Right" Variant="Quiet" Size="Sm" Content="Reset" Command="{Binding ResetGeneralCommand}"
+                                           VerticalAlignment="Center" Margin="0,0,-10,0" />
+                            <TextBlock Text="Theme, quiet hours and timing" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </StackPanel>
+                </c:GlassSurface>
+
+                <c:BradyButton Variant="Quiet" Content="Reset everything to defaults" Command="{Binding ResetAllCommand}"
+                               HorizontalAlignment="Left" Margin="-14,20,0,0" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Undo toast: a small glass pill at the bottom, never a dialog. -->
+        <Border x:Name="UndoToast" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24"
+                Padding="16,6,6,6" CornerRadius="{StaticResource RadiusMdCorner}"
+                Background="{DynamicResource SurfaceSolidBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1"
+                Opacity="0" IsHitTestVisible="False">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="UndoRise" />
+            </Border.RenderTransform>
+            <Border.Effect>
+                <DropShadowEffect Direction="270" ShadowDepth="6" BlurRadius="24" Opacity="0.18" />
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="UndoMessage" Style="{StaticResource BodyText}" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                <c:BradyButton x:Name="UndoButton" Variant="Glass" Size="Sm" Content="Undo" Margin="16,0,0,0" Click="OnUndoClick" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

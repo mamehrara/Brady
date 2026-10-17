@@ -13,9 +13,15 @@ public sealed partial class SettingsService : IDisposable
     private readonly ILogger<SettingsService> _logger;
 
     public SettingsService(TimeProvider time, ILogger<SettingsService> logger)
+        : this(SettingsStore.DefaultPath, time, logger)
+    {
+    }
+
+    /// <summary>A service over another file (used by <c>--snapshot</c> so it never touches real settings).</summary>
+    public SettingsService(string path, TimeProvider time, ILogger<SettingsService> logger)
     {
         _logger = logger;
-        _store = new SettingsStore(SettingsStore.DefaultPath, time);
+        _store = new SettingsStore(path, time);
         Current = _store.Load();
         if (_store.LastProblem is { } problem) LogUnreadable(problem);
     }

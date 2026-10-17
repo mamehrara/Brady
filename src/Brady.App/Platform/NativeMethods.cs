@@ -69,6 +69,15 @@ internal static partial class NativeMethods
     [LibraryImport("shell32.dll")]
     public static partial int SHQueryUserNotificationState(out int state);
 
+    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    public const int DWMWA_CAPTION_COLOR = 35;
+    public const int DWMWA_TEXT_COLOR = 36;
+
+    [LibraryImport("dwmapi.dll")]
+    private static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref int value, int size);
+
+    public static void SetDwmInt(nint hwnd, int attribute, int value) => DwmSetWindowAttribute(hwnd, attribute, ref value, sizeof(int));
+
     public const int SM_CXSMICON = 49;
 
     [LibraryImport("user32.dll")]
