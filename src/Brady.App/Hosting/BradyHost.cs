@@ -61,6 +61,7 @@ public static class BradyHost
             RulesFor(sp.GetRequiredService<SettingsService>().Current, options)));
         builder.Services.AddSingleton<IStartupRegistration, StartupRegistration>();
         builder.Services.AddSingleton<StartupOffer>();
+        builder.Services.AddSingleton<SoftSound>();
         builder.Services.AddSingleton<SystemEventsBridge>();
         builder.Services.AddSingleton<ReminderPresenter>();
         builder.Services.AddSingleton<TrayController>();

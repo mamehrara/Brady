@@ -1,4 +1,5 @@
 using System.Windows.Threading;
+using Brady.App.Platform;
 using Brady.App.Toasts;
 using Brady.Core.Copy;
 using Brady.Core.Reminders;
@@ -14,6 +15,7 @@ public sealed partial class ReminderPresenter(
     ReminderEngine engine,
     ToastStackManager toasts,
     CopyDeck copy,
+    SoftSound sound,
     ILogger<ReminderPresenter> logger)
 {
     private Dispatcher? _dispatcher;
@@ -42,6 +44,7 @@ public sealed partial class ReminderPresenter(
             CopyDeck.AfterDone(due.Kind, rule.Interval),
             rule.Snooze);
 
+        sound.PlayIfEnabled();
         var outcome = await toasts.ShowAsync(content);
         engine.Report(due.Kind, outcome switch
         {
