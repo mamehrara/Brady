@@ -2,6 +2,26 @@
 
 All notable changes to Brady are recorded here. Each build phase gets its own section and its own `phase-N` git tag.
 
+## [0.6.0] - Phase 4: guided breaks and polish - 2026-10-17
+
+### Added
+- Guided breaks for Eyes and Stretch:
+  - "Start 20s" (the length comes from Settings) turns the toast into a countdown ring in place.
+  - The ring follows `Countdown.md`: 96 px, a 7 px stroke in the kind's tone over its soft track, and numeral digits.
+  - It empties in one smooth linear animation, and the digits tick once a second without jittering.
+  - At zero, Brady cheers and the break counts as Done. The card's height is reserved from the start, so nothing jumps.
+  - The toast doesn't time out while a break runs; closing it mid-break counts as dismissed.
+- On guided toasts "Start 20s" is the primary button, followed by Snooze and Skip on one row. Finishing the break counts as Done.
+- The soft sound (Settings, off by default): a 90 ms wooden tick at about 13% volume when a reminder arrives. It is synthesized in memory, so there's no sound file.
+- `--demo` includes a guided break; `--snapshot` renders one.
+
+### Changed
+- The button press nudge (1 px) is skipped when Windows "Animation effects" is off, like every other movement. Reduced motion now plays only fades.
+
+### Notes
+- The installed (self-contained) build idles at about 13 MB working set and 0% CPU.
+- Display scaling of 125% and 150% hasn't been tested on a real scaled screen yet (this PC runs at 100%).
+
 ## [0.5.0] - Phase 5: installer and GitHub Releases - 2026-10-17
 
 The first installable release. (Phase 4, guided breaks and polish, comes next.)

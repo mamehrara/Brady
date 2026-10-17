@@ -16,6 +16,12 @@ Brady lives in the notification area. Hover for what's next ("Brady · next: Eye
 | --- | --- |
 | ![Tray menu and flyout, light theme](docs/images/tray-light.png) | ![Tray menu and flyout, dark theme](docs/images/tray-dark.png) |
 
+Eyes and Stretch reminders offer a short guided break. Press **Start 20s** and the toast turns into a countdown ring in place; when it runs out, Brady cheers and counts the break as done.
+
+| Light | Dark |
+| --- | --- |
+| ![Guided break, light theme](docs/images/guided-light.png) | ![Guided break, dark theme](docs/images/guided-dark.png) |
+
 Every reminder has its own timing in Settings: on or off, an interval (presets or a custom number of minutes), snooze length and, for Eyes and Stretch, a guided-break length. Changes apply as you make them.
 
 | Light | Dark |
@@ -29,6 +35,8 @@ Every reminder has its own timing in Settings: on or off, an interval (presets o
 - **Never nags.** Brady leaves at least a few minutes between reminders, shows one at a time when several are due, and stays quiet during fullscreen apps, presentations, Focus sessions and your quiet hours.
 - **Small glass toasts** in the corner of your screen. They never take keyboard focus, so you can keep typing while one is up.
 - **Pause when you need to:** for 30 minutes, an hour, or until tomorrow morning, from the tray. A pause survives a restart.
+- **Guided breaks** for Eyes (20 or 30 seconds) and Stretch (15, 30 or 45 seconds), with a countdown ring right in the toast.
+- **A soft sound**, if you want one: a quiet tick when Brady arrives (off by default).
 - **Your timing:** each reminder's interval, snooze and guided-break length, plus quiet hours, how long away counts as a break, the gap between reminders, theme, and Start with Windows.
 - **Light on resources.** About 13 MB working set and 0% CPU while idle, with no browser engine inside.
 
@@ -42,7 +50,7 @@ Brady is being built in phases:
 | 2 | Reminder engine and tray icon | done |
 | 3 | Settings (per-reminder timing) | done |
 | 5 | Installer and GitHub Releases | done |
-| 4 | Guided breaks and polish | next |
+| 4 | Guided breaks and polish | done |
 
 ## Install
 
@@ -117,7 +125,7 @@ Add `-- --check` to either command to verify that the committed files are up to 
 | Flag | What it does |
 | --- | --- |
 | `--demo` | Cycles through every reminder kind and every way a toast can end (Done, Snooze, Skip, timeout), plus two stacked toasts reflowing, then exits. Add `--loop` to keep going. |
-| `--snapshot <dir>` | Renders the toasts, the tray menu and flyout, and the Settings page in light and dark to PNGs in `<dir>`, then exits. This is how the screenshots above are made. |
+| `--snapshot <dir>` | Renders the toasts, a guided break, the tray menu and flyout, and the Settings page in light and dark to PNGs in `<dir>`, then exits. This is how the screenshots above are made. |
 | `--fps` | Shows a frame-time overlay and logs dropped frames while toasts are on screen. |
 | `--theme light\|dark` | Overrides the Windows app theme. |
 | `--reduced-motion` | Previews the reduced-motion path (plain fades) without changing Windows settings. |
